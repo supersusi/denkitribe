@@ -16,7 +16,7 @@ def ReadVLValue(file):
 class TrackEvent:
   'Track event data class.'
   def __init__(self, file):
-    'Reads and stores a track event.'
+    'Read and store a track event.'
     delta = ReadVLValue(file)
     assert(delta % 0x18 == 0)   # 0x18 = length of 16th note
     code = ord(file.read(1))
@@ -35,10 +35,10 @@ class TrackEvent:
       self.status = code
       self.data1 = ord(file.read(1))
       self.data2 = ord(file.read(1))
-  def MakeStruct(self):
-    'Make a C structure entry of the event.'
-    return '{0x%02x,0x%02x,0x%02x,0x%02x},' % \
-           (self.delta, self.status, self.data1, self.data2)
+  def MakeTuple(self):
+    'returns a tuple of data.'
+    return (self.delta, self.status, self.data1, self.data2)
+           
 
 def CheckHeader(file):
   'Reads the header chunk and checks the precondition.'
@@ -59,25 +59,22 @@ def ReadTrackChunk(file):
 
 class CodeGenerator:
   def __init__(self):
-    self.seqBuffer = ''
-    self.seqCount = 0
+    self.data = []
+    self.startPoints = []
   def AddSequence(self, eventArray):
-    temp = 'const EventData sequence%02d[] = {\n' % self.seqCount
+    self.startPoints.append(len(self.data))
     for event in eventArray:
-      temp += '  %s\n' % event.MakeStruct()
-    self.seqBuffer += temp + '  {0xff}\n};\n'
-    self.seqCount += 1
+      self.data.append(event.MakeTuple())
+    self.data.append((0xff, 0, 0, 0))
   def Generate(self):
-    temp = 'struct EventData {\n'
-    temp += '  unsigned char delta;\n'
-    temp += '  unsigned char status;\n'
-    temp += '  unsigned char data1;\n'
-    temp += '  unsigned char data2;\n'
+    temp = 'PROGMEM prog_uint8_t sequenceData[] = {\n'
+    for line in self.data:
+      temp += '  0x%02x,0x%02x,0x%02x,0x%02x,\n' % line
     temp += '};\n'
-    temp += self.seqBuffer
-    temp += 'const EventData* sequences[] = {\n'
-    for i in range(self.seqCount): temp += '  sequence%02d,\n' % i
-    return temp + '};\n'
+    temp += 'const uint16_t startPoints[] = {\n  '
+    for offs in self.startPoints:
+      temp += '0x%04x,' % (offs * 4)
+    return temp + '\n};\n'
 
 generator = CodeGenerator()
 

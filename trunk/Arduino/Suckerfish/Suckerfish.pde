@@ -1,7 +1,8 @@
+#include "avr/pgmspace.h"
 #include "Sequence.h"
 
-int sequenceSelect = 0;
-const EventData* pCurrentEvent;
+int selector = 3;
+int dataOffset;
 
 void setup() {
   Serial.begin(31250);
@@ -9,15 +10,15 @@ void setup() {
 }
 
 void loop() {
-  pCurrentEvent = sequences[sequenceSelect];
-  while (pCurrentEvent->delta != 0xff) {
-    if (pCurrentEvent->delta > 0) {
-      delay(100 * pCurrentEvent->delta);
-    }
-    sendMidi(pCurrentEvent->status,
-             pCurrentEvent->data1,
-             pCurrentEvent->data2);
-    pCurrentEvent++;
+  dataOffset = startPoints[selector];
+  while (true) {
+    uint8_t delta  = pgm_read_byte_near(sequenceData + dataOffset++);
+    uint8_t status = pgm_read_byte_near(sequenceData + dataOffset++);
+    uint8_t data1  = pgm_read_byte_near(sequenceData + dataOffset++);
+    uint8_t data2  = pgm_read_byte_near(sequenceData + dataOffset++);
+    if (delta == 0xff) break;
+    if (delta > 0) delay(120 * delta);
+    sendMidi(status, data1, data2);
   }
 }
 
