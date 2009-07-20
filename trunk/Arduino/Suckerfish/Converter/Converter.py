@@ -62,7 +62,7 @@ class CodeGenerator:
     self.seqBuffer = ''
     self.seqCount = 0
   def AddSequence(self, eventArray):
-    temp = 'EventData seq%02d[] = {\n' % self.seqCount
+    temp = 'const EventData sequence%02d[] = {\n' % self.seqCount
     for event in eventArray:
       temp += '  %s\n' % event.MakeStruct()
     self.seqBuffer += temp + '  {0xff}\n};\n'
@@ -75,8 +75,8 @@ class CodeGenerator:
     temp += '  unsigned char data2;\n'
     temp += '};\n'
     temp += self.seqBuffer
-    temp += 'EventData* sequences[] = {\n'
-    for i in range(self.seqCount): temp += '  seq%02d,\n' % i
+    temp += 'const EventData* sequences[] = {\n'
+    for i in range(self.seqCount): temp += '  sequence%02d,\n' % i
     return temp + '};\n'
 
 generator = CodeGenerator()
@@ -88,4 +88,4 @@ for filename in os.listdir('.'):
     generator.AddSequence(ReadTrackChunk(file))
     file.close()
 
-open('output.cpp', 'wb').write(generator.Generate())
+open('Sequence.h', 'wb').write(generator.Generate())
