@@ -1,5 +1,11 @@
+#define USE_TIMER1
+
 #include <avr/pgmspace.h>
+#ifdef USE_TIMER1
 #include <TimerOne.h>
+#else
+#include <MsTimer2.h>
+#endif
 #include "Sequence.h"
 
 // BPM - You can modify this value
@@ -40,60 +46,69 @@ public:
 // Pattern selector class (allstatic)
 class Selector {
 public:
-  static const uint8_t kFirstPin_ = 2;
+  static const uint8_t kFirstPin_ = 4;
   static void initialize() {
     pinMode(kFirstPin_ + 0, INPUT);
     pinMode(kFirstPin_ + 1, INPUT);
+    pinMode(kFirstPin_ + 2, INPUT);
+    pinMode(kFirstPin_ + 3, INPUT);
   }
   static int getIndex() {
     return (digitalRead(kFirstPin_ + 0) ? 0 : 1) +
-           (digitalRead(kFirstPin_ + 1) ? 0 : 2);
+           (digitalRead(kFirstPin_ + 1) ? 0 : 2) +
+           (digitalRead(kFirstPin_ + 2) ? 0 : 4) +
+           (digitalRead(kFirstPin_ + 3) ? 0 : 8);
   }
 };
 
 // Pattern sequencer class
 class Sequencer {
 public:
-  uint16_t offset_;    // Offset to the current event
-  uint8_t delta_;      // Delta step value from the previous event
+  uint16_t dataOffset_;  // Data offset to the current event
+  uint8_t stepCount_;    // Step count from the previous event
   // Constructor
   Sequencer() {
     resetPattern();
-    delta_ = 0;
+    stepCount_ = 0;
   }
   // Reset and start the next pattern
   void resetPattern() {
-    offset_ = startPoints[Selector::getIndex()];
+    dataOffset_ = startPoints[Selector::getIndex()];
   }
   // Start playing
   void start() {
     resetPattern();
-    delta_ = 0;
+    stepCount_ = 0;
     MidiOut::sendStart();
+    processEvent();
   }
   // Stop playing
   void stop() {
     MidiOut::sendStop();
     MidiOut::sendAllNoteOff();
   }
-  // Process the events on the current timestep
+  // Advance the time and process events
   void doStep() {
-    delta_++;
+    stepCount_ ++;
+    processEvent();
+  }
+  // Process the events on the current timestep
+  void processEvent() {
     while (true) {
-      uint8_t delta  = pgm_read_byte_near(sequenceData + offset_);
+      uint8_t delta = pgm_read_byte_near(sequenceData + dataOffset_);
       // Terminate the current pattern if delta == 0xff
       if (delta == 0xff) {
         resetPattern();
         continue;
       }
       // Sufficient time has passed?
-      if (delta > delta_) return;
-      delta_ -= delta;
+      if (delta > stepCount_) return;
+      stepCount_ -= delta;
       // Process this event
-      offset_++;
-      MidiOut::sendMessage(pgm_read_byte_near(sequenceData + offset_++),
-                           pgm_read_byte_near(sequenceData + offset_++),
-                           pgm_read_byte_near(sequenceData + offset_++));
+      dataOffset_++;
+      MidiOut::sendMessage(pgm_read_byte_near(sequenceData + dataOffset_++),
+                           pgm_read_byte_near(sequenceData + dataOffset_++),
+                           pgm_read_byte_near(sequenceData + dataOffset_++));
     }
   }
 };
@@ -104,7 +119,7 @@ Sequencer sequencer;
 // Indicator driver (allstatic)
 class Indicator {
 public:
-  static const uint8_t kPin_ = 5;
+  static const uint8_t kPin_ = 3;
   static void initialize() {
     pinMode(kPin_, OUTPUT);
   }
@@ -121,25 +136,36 @@ public:
   static boolean firstClock_;    // True until the first clock
   // Start the clock
   static void start() {
-    noteInterval_ = 0;
-    beatInterval_ = 0;
+    noteInterval_ = 5;
+    beatInterval_ = 3;
     firstClock_ = true;
+#ifdef USE_TIMER1
     Timer1.initialize(60UL * 1000 * 1000 / (kBpm * 24));
     Timer1.attachInterrupt(tick);
+#else
+    MsTimer2::set(60UL * 1000 / (kBpm * 24), tick);
+    MsTimer2::start();
+#endif
+    MidiOut::sendClock();
   }
   // Stop the clock
   static void stop() {
+#ifdef USE_TIMER1
     Timer1.detachInterrupt();
+#else
+    MsTimer2::stop();
+#endif
     Indicator::setLight(false);
   }
   // Handler for the timer interruption
   static void tick() {
-    // Send a clock signal except the first clock
+    // Ignore the first clock
     if (firstClock_) {
       firstClock_ = false;
-    } else {
-      MidiOut::sendClock();
+      return;
     }
+    // Send a clock
+    MidiOut::sendClock();
     // Process the sequence
     if (noteInterval_ == 0) {
       sequencer.doStep();
@@ -163,7 +189,7 @@ boolean Clock::firstClock_;
 // Play switch interface (allstatic)
 class PlaySwitch {
 public:
-  static const uint8_t kPin_ = 4;
+  static const uint8_t kPin_ = 2;
   static const uint8_t kDelay_ = 60;
   static uint8_t offCount_;
   static void initialize() {
