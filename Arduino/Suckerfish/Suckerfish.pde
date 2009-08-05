@@ -48,16 +48,16 @@ class Selector {
 public:
   static const uint8_t kFirstPin_ = 4;
   static void initialize() {
-    pinMode(kFirstPin_ + 0, INPUT);
-    pinMode(kFirstPin_ + 1, INPUT);
-    pinMode(kFirstPin_ + 2, INPUT);
-    pinMode(kFirstPin_ + 3, INPUT);
+    for (uint8_t i = 0; i < 4; ++i) {
+      pinMode(kFirstPin_ + i, INPUT);
+      digitalWrite(kFirstPin_ + i, HIGH);  // pull-up
+    }
   }
   static int getIndex() {
-    return (digitalRead(kFirstPin_ + 0) ? 0 : 1) +
-           (digitalRead(kFirstPin_ + 1) ? 0 : 2) +
-           (digitalRead(kFirstPin_ + 2) ? 0 : 4) +
-           (digitalRead(kFirstPin_ + 3) ? 0 : 8);
+    return (digitalRead(kFirstPin_ + 0) ? 1 : 0) +
+           (digitalRead(kFirstPin_ + 1) ? 2 : 0) +
+           (digitalRead(kFirstPin_ + 2) ? 4 : 0) +
+           (digitalRead(kFirstPin_ + 3) ? 8 : 0);
   }
 };
 
@@ -194,6 +194,7 @@ public:
   static uint8_t offCount_;
   static void initialize() {
     pinMode(kPin_, INPUT);
+    digitalWrite(kPin_, HIGH);  // pull-up
     offCount_ = 0;
   }
   static boolean update() {
