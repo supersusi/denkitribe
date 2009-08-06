@@ -1,15 +1,9 @@
-#define USE_TIMER1
-
 #include <avr/pgmspace.h>
-#ifdef USE_TIMER1
 #include <TimerOne.h>
-#else
-#include <MsTimer2.h>
-#endif
 #include "Sequence.h"
 
 // BPM - You can modify this value
-const uint16_t kBpm = 128;
+const uint16_t kBpm = 130;
 
 // MIDI output class (allstatic)
 class MidiOut {
@@ -139,22 +133,14 @@ public:
     noteInterval_ = 5;
     beatInterval_ = 3;
     firstClock_ = true;
-#ifdef USE_TIMER1
     Timer1.initialize(60UL * 1000 * 1000 / (kBpm * 24));
     Timer1.attachInterrupt(tick);
-#else
-    MsTimer2::set(60UL * 1000 / (kBpm * 24), tick);
-    MsTimer2::start();
-#endif
+    Indicator::setLight(true);
     MidiOut::sendClock();
   }
   // Stop the clock
   static void stop() {
-#ifdef USE_TIMER1
     Timer1.detachInterrupt();
-#else
-    MsTimer2::stop();
-#endif
     Indicator::setLight(false);
   }
   // Handler for the timer interruption
