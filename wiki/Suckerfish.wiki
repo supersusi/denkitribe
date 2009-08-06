@@ -1,4 +1,4 @@
-#Suckerfish (minimalist's sequencer)
+Suckerfish の解説ページ
 
 = 概要 =
 
