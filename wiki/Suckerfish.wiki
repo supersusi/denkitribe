@@ -1,0 +1,29 @@
+#Suckerfish (minimalist's sequencer)
+
+= 概要 =
+
+Arduino を使用したミニマムな仕様の MIDI シーケンサーです。
+
+http://farm4.static.flickr.com/3567/3765703439_8c36754725.jpg
+
+[http://vimeo.com/5812001 演奏デモビデオ]
+
+= 回路図 =
+
+http://farm4.static.flickr.com/3557/3794990037_ee602edbc8.jpg
+
+ユニバーサル基板上での配線例は以下のようになります。
+
+http://farm3.static.flickr.com/2469/3794989977_b9261deeb4.jpg
+
+完成品の写真です。
+
+http://farm3.static.flickr.com/2589/3795822340_52f81da66b.jpg
+
+上から見るとこうなっています。
+
+http://farm3.static.flickr.com/2663/3795001487_a8f2ae112e.jpg
+
+= ソースコード =
+
+ソースリポジトリの {{{svntrunk/Arduino/Suckerfish/Suckerfish.pde}}} 以下にあります。ウェブインターフェースからちょっと覗いてみるには[http://code.google.com/p/denkitribe/source/browse/#svn/trunk/Arduino/Suckerfish こちらから]どうぞ。
