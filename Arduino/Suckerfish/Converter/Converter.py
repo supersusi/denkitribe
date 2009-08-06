@@ -85,5 +85,6 @@ for filename in os.listdir('.'):
     generator.AddSequence(ReadTrackChunk(file))
     file.close()
 
-os.unlink('../Sequence.h')
-open('../Sequence.h', 'wb').write(generator.Generate())
+outFilePath = '../Sequence.h'
+if os.path.isfile(outFilePath): os.unlink(outFilePath)
+open(outFilePath, 'wb').write(generator.Generate())
