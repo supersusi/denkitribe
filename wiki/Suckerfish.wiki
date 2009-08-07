@@ -13,15 +13,15 @@ http://farm3.static.flickr.com/2575/3766571472_8dd1cf02c0.jpg
 
 Suckerfish は，いわゆる「パターンシーケンサー」とでも言うべきもので，内蔵している１６個のパターンを選択して再生することができます。パターンの切り替えはトグルスイッチによって行います。４つのトグルスイッチをつかって２進数的にパターン番号を指定するわけです。ちなみに，個人的な好みから左側が LSB になっています。
 
-ボタンで再生開始，もう一回押すと再生終了。ボタンを押したタイミングで MIDI システムリアルタイムメッセージのスタート (0xFA) とストップ (0xFC) が送信されます。パターンの切り替えはパターンが一周したタイミングで適用されます。
+ボタンで再生開始，もう一回押すと再生終了。再生開始時に MIDI システムリアルタイムメッセージのスタート (0xFA) が送信され，再生停止時にストップ (0xFC) が送信されます。パターンの切り替えはパターンが一周したタイミングで適用されます。
 
-パターンの再生速度 (BPM) に合わせてタイミングクロック (0xF8) を送信します。 BPM はあまり正確ではありません。従って，このデバイスを仕様する場合は，このデバイスを同期のマスターにする必要があります。
+パターンの再生速度 (BPM) に合わせてタイミングクロック (0xF8) を送信します。 BPM はあまり正確ではありません。従って，このデバイスを使用する場合は，このデバイスを同期のマスターにする必要があります。
 
 = パターンの作成 =
 
-パターンデータはソースコード内に埋め込まれる形になっています。 [http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/Suckerfish/Sequence.h Sequence.h] がそれです。このファイルは [http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/Suckerfish/Converter Converter] ディレクトリ内にある Converter.py （Python スクリプト）によって自動生成されます。
+パターンデータはソースコード内に埋め込まれる形になっています。 [http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/Suckerfish/Sequence.h Sequence.h] がそれです。このファイルは [http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/Suckerfish/Converter Converter] ディレクトリ内にある [http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/Suckerfish/Converter/Converter.py Converter.py] （Python スクリプト）によって自動生成されます。
 
-Converter.py は，カレントディレクトリ内にある拡張子 .mid のファイルをスキャンし，統合したうえで Sequence.h に出力するスクリプトです。中身はかなり手抜きの実装になっており，基本的に Ableton Live によって出力された .mid ファイルにしか対応していません。
+Converter.py は，カレントディレクトリ内にある拡張子 .mid のファイルをスキャンし，変換・結合したうえで Sequence.h に出力するスクリプトです。中身はかなり手抜きの実装になっており，基本的に Ableton Live によって出力された .mid ファイルにしか対応していません。
 
 Ableton Live から .mid ファイルの出力を行うには，クリップを選択したのちに右クリックメニューから "Export MIDI Clip" を選択します。
 
@@ -36,18 +36,18 @@ BPM の指定はソースコード中で行います。[http://code.google.com/p
 ||ユニバーサル基板||DAISEN PU37x52||1||千石電商，[http://eleshop.jp/shop/g/g7B7319/ 共立エレショップ]||部品が収まれば何でもいいです。千石電商の店頭が入手しやすいです。||
 ||基板用トグルスイッチ||[http://www.linkman.jp/user/shohin.php?p=57697 Linkman 2A11N4B4U2SE]||4||[https://www.marutsu.co.jp/user/shohin.php?p=40286 マルツ]，[http://akizukidenshi.com/catalog/g/gP-00300/ 秋月]||-||
 ||照光スイッチ||[http://www.linkman.jp/user/shohin.php?p=57348 Linkman PB61303BL4102]||1||[https://www.marutsu.co.jp/user/shohin.php?p=10773 マルツ]||モーメンタリーです。同じ見た目でオルタネイトの製品もありますので，間違えないように。||
-||２ピンコネクター||-||1||[http://www.sengoku.co.jp/mod/sgk_cart/search.php?toku=&cond8=and&dai=&chu=&syo=&cond9=&k3=0&list=2&pflg=n&multi=&code=7AZE-PML7 千石電商]||「ファン用コネクター」「ＥＩコネクター」「ナイロンコネクター」等の名前で売られています。||
-||２ピンヘッダー||-||1||[http://www.sengoku.co.jp/mod/sgk_cart/search.php?toku=&cond8=and&dai=&chu=&syo=&cond9=&k3=0&list=2&pflg=n&multi=&code=7ANE-P8MG 千石電商]||-||
-||３ピンコネクタ||-||1||[http://www.sengoku.co.jp/mod/sgk_cart/search.php?toku=&cond8=and&dai=&chu=&syo=&cond9=&k3=0&list=2&pflg=n&multi=&code=8AY2-CKJL 千石電商]||-||
+||抵抗 150ohm||-||1||-||-||
+||抵抗 220ohm||-||1||-||-||
+||２ピンヘッダー||-||1||[http://www.sengoku.co.jp/mod/sgk_cart/search.php?toku=&cond8=and&dai=&chu=&syo=&cond9=&k3=0&list=2&pflg=n&multi=&code=7ANE-P8MG 千石電商]||「ファン用コネクター」「ＥＩコネクター」「ナイロンコネクター」等の名前で売られています。||
 ||３ピンヘッダー||-||1||[http://www.sengoku.co.jp/mod/sgk_cart/search.php?toku=&cond8=and&dai=&chu=&syo=&cond9=&k3=0&list=2&pflg=n&multi=&code=3AZL-DBKC 千石電商]||-||
 ||スペーサー||-||4||[https://www.marutsu.co.jp/user/shohin.php?p=34709 マルツ], 千石電商||径サイズが M3 のものであれば何でもいいです。千石電商の店頭が入手しやすいです。||
 ||ネジ (M3)||-||4||[https://www.marutsu.co.jp/user/shohin.php?p=18770 マルツ], 千石電商||見た目的にポリビスがおすすめです。千石電商の店頭が入手しやすいです。||
 
-= 回路図 =
+= 回路図・配線図 =
 
 http://farm4.static.flickr.com/3557/3794990037_ee602edbc8.jpg
 
-ユニバーサル基板上での配線例は以下のようになります。
+配線は以下のようになります（基板の裏側から見た図です）。
 
 http://farm3.static.flickr.com/2469/3794989977_b9261deeb4.jpg
 
@@ -59,6 +59,8 @@ http://farm3.static.flickr.com/2589/3795822340_52f81da66b.jpg
 
 http://farm3.static.flickr.com/2663/3795001487_a8f2ae112e.jpg
 
-= ソースコード =
+= プログラム =
 
-ソースリポジトリの {{{svntrunk/Arduino/Suckerfish/Suckerfish.pde}}} 以下にあります。ウェブインターフェースからちょっと覗いてみるには[http://code.google.com/p/denkitribe/source/browse/#svn/trunk/Arduino/Suckerfish こちらから]どうぞ。
+ソースリポジトリの {{{svntrunk/Arduino/Suckerfish/Suckerfish.pde}}} 以下にあります。ウェブインターフェースからちょっと覗いてみるには[http://code.google.com/p/denkitribe/source/browse/#svn/trunk/Arduino/Suckerfish こちら]をどうぞ。
+
+ビルドには [http://www.arduino.cc/playground/Code/Timer1 Timer1] ライブラリが必要になります。
