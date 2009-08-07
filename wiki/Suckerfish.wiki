@@ -16,7 +16,15 @@ Suckerfish は，いわゆる「パターンシーケンサー」とでも言う
 
 パターンの再生速度 (BPM) に合わせてタイミングクロック (0xF8) を送信します。 BPM はあまり正確ではありません。従って，このデバイスを仕様する場合は，このデバイスを同期のマスターにする必要があります。
 
+= パターンの作成 =
 
+パターンデータはソースコード内に埋め込まれる形になっています。 [http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/Suckerfish/Sequence.h Sequence.h] がそれです。このファイルは [http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/Suckerfish/Converter Converter] ディレクトリ内にある Converter.py （Python スクリプト）によって自動生成されます。
+
+Converter.py は，カレントディレクトリ内にある拡張子 .mid のファイルをスキャンし，統合したうえで Sequence.h に出力するスクリプトです。中身はかなり手抜きの実装になっており，基本的に Ableton Live によって出力された .mid ファイルにしか対応していません。
+
+Ableton Live から .mid ファイルの出力を行うには，クリップを選択したのちに右クリックメニューから "Export MIDI Clip" を選択します。
+
+http://farm3.static.flickr.com/2541/3797040920_d344001154_o.jpg
 
 = 回路図 =
 
