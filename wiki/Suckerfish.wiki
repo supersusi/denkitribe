@@ -33,10 +33,15 @@ BPM の指定はソースコード中で行います。[http://code.google.com/p
 
 ||品名||型番||数量||代表的な入手先||備考||
 ||[http://arduino.cc/en/Main/ArduinoBoardProMini Arduino Pro Mini (5V)]||[http://www.sparkfun.com/commerce/product_info.php?products_id=9218 Sparkfun DEV-09218]||1||[http://www.switch-science.com/products/detail.php?product_id=170 スイッチサイエンス]||ATmega168 版でも OK ですが，3.3V 版は不可です。||
-||ユニバーサル基板||DAISEN PU37x52||1||千石電商，[http://eleshop.jp/shop/g/g7B7319/ 共立エレショップ]||部品が収まれば何でもいいです。||
+||ユニバーサル基板||DAISEN PU37x52||1||千石電商，[http://eleshop.jp/shop/g/g7B7319/ 共立エレショップ]||部品が収まれば何でもいいです。千石電商の店頭が入手しやすいです。||
 ||基板用トグルスイッチ||[http://www.linkman.jp/user/shohin.php?p=57697 Linkman 2A11N4B4U2SE]||4||[https://www.marutsu.co.jp/user/shohin.php?p=40286 マルツ]，[http://akizukidenshi.com/catalog/g/gP-00300/ 秋月]||-||
 ||照光スイッチ||[http://www.linkman.jp/user/shohin.php?p=57348 Linkman PB61303BL4102]||1||[https://www.marutsu.co.jp/user/shohin.php?p=10773 マルツ]||モーメンタリーです。同じ見た目でオルタネイトの製品もありますので，間違えないように。||
-
+||２ピンコネクター||-||1||[http://www.sengoku.co.jp/mod/sgk_cart/search.php?toku=&cond8=and&dai=&chu=&syo=&cond9=&k3=0&list=2&pflg=n&multi=&code=7AZE-PML7 千石電商]||「ファン用コネクター」「ＥＩコネクター」「ナイロンコネクター」等の名前で売られています。||
+||２ピンヘッダー||-||1||[http://www.sengoku.co.jp/mod/sgk_cart/search.php?toku=&cond8=and&dai=&chu=&syo=&cond9=&k3=0&list=2&pflg=n&multi=&code=7ANE-P8MG 千石電商]||-||
+||３ピンコネクタ||-||1||[http://www.sengoku.co.jp/mod/sgk_cart/search.php?toku=&cond8=and&dai=&chu=&syo=&cond9=&k3=0&list=2&pflg=n&multi=&code=8AY2-CKJL 千石電商]||-||
+||３ピンヘッダー||-||1||[http://www.sengoku.co.jp/mod/sgk_cart/search.php?toku=&cond8=and&dai=&chu=&syo=&cond9=&k3=0&list=2&pflg=n&multi=&code=3AZL-DBKC 千石電商]||-||
+||スペーサー||-||4||[https://www.marutsu.co.jp/user/shohin.php?p=34709 マルツ], 千石電商||径サイズが M3 のものであれば何でもいいです。千石電商の店頭が入手しやすいです。||
+||ネジ (M3)||-||4||[https://www.marutsu.co.jp/user/shohin.php?p=18770 マルツ], 千石電商||見た目的にポリビスがおすすめです。千石電商の店頭が入手しやすいです。||
 
 = 回路図 =
 
