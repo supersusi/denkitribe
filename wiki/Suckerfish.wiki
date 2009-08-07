@@ -5,6 +5,7 @@ Suckerfish の解説ページ
 Arduino を使用したミニマムな仕様の MIDI シーケンサーです。
 
 http://farm4.static.flickr.com/3567/3765703439_8c36754725.jpg
+http://farm3.static.flickr.com/2575/3766571472_8dd1cf02c0.jpg
 
 [http://vimeo.com/5812001 演奏デモビデオ]
 
@@ -25,6 +26,17 @@ Converter.py は，カレントディレクトリ内にある拡張子 .mid の�
 Ableton Live から .mid ファイルの出力を行うには，クリップを選択したのちに右クリックメニューから "Export MIDI Clip" を選択します。
 
 http://farm3.static.flickr.com/2541/3797040920_d344001154_o.jpg
+
+BPM の指定はソースコード中で行います。[http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/Suckerfish/Suckerfish.pde Suckerfish.pde] の先頭にある定数 {{{kBpm}}} がそれです。
+
+= 部品リスト =
+
+||品名||型番||数量||代表的な入手先||備考||
+||Arduino||[http://arduino.cc/en/Main/ArduinoBoardProMini Arduino Pro Mini (5V)]||1||[http://www.switch-science.com/products/detail.php?product_id=170 スイッチサイエンス]||MIDI OUT の仕様上 3.3V 版は恐らく使えません||
+||ユニバーサル基板||DAISEN PU37x52||1||千石電商，[http://eleshop.jp/shop/g/g7B7319/ 共立エレショップ]||部品が収まれば何でもいいです||
+||基板用トグルスイッチ||[http://www.linkman.jp/user/shohin.php?p=57697 Linkman 2A11N4B4U2SE]||4||[https://www.marutsu.co.jp/user/shohin.php?p=40286 マルツ]，[http://akizukidenshi.com/catalog/g/gP-00300/ 秋月]||-||
+||照光スイッチ||[http://www.linkman.jp/user/shohin.php?p=57348 Linkman PB61303BL4102]||1||[https://www.marutsu.co.jp/user/shohin.php?p=10773 マルツ]||モーメンタリーです。同じ見た目でオルタネイトの製品もありますので，間違えないように。||
+
 
 = 回路図 =
 
