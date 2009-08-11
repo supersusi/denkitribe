@@ -72,15 +72,15 @@ public:
     digits_[2] = digit3;
   }
   // set a numeric value to the display
-  void setValue(uint16_t value) {
+  void setValue(uint16_t value, uint8_t attr = 0) {
     if (value < 10) {
-      setDigits(value % 10, LedPattern::kCharBlank, LedPattern::kCharBlank);
+      setDigits(value % 10 | attr, LedPattern::kCharBlank, LedPattern::kCharBlank);
     } 
     else if (value < 100) {
-      setDigits(value % 10, value % 100 / 10, LedPattern::kCharBlank);
+      setDigits(value % 10 | attr, value % 100 / 10 | attr, LedPattern::kCharBlank);
     } 
     else if (value < 1000) {
-      setDigits(value % 10, value % 100 / 10, value % 1000 / 100);
+      setDigits(value % 10 | attr, value % 100 / 10 | attr, value % 1000 / 100 | attr);
     } 
     else {
       setDigits(9 | LedPattern::kAttrBlink,
@@ -134,13 +134,37 @@ Display display;
 // Cost counter class
 class CostCounter {
 public:
+  uint32_t hourlyWage_;    // average of hourly wage of your company
+  uint32_t numAttendee_;   // number of attendee of the meeting
   // these values are stored as fixed point number (8 bit fractinal)
   uint32_t fpCostPerSec_;  // cost per second
   uint32_t fpTotalCost_;   // total cost
   // initialization
   void initialize(uint32_t hourlyWage, uint32_t numAttendee) {
-    fpCostPerSec_ = 0x100UL * hourlyWage * numAttendee / (60UL * 60);
+    hourlyWage_ = hourlyWage;
+    numAttendee_ = numAttendee;
+    recalcCostPerSec();
     fpTotalCost_ = 0;
+  }
+  // re-calculate cost per second
+  void recalcCostPerSec() {
+    fpCostPerSec_ = 0x100UL * hourlyWage_ * numAttendee_ / (60UL * 60);
+  }
+  // reset the total cost
+  void reset() {
+    fpTotalCost_ = 0;
+  }
+  // add one attendee
+  void incAttendee() {
+    numAttendee_++;
+    recalcCostPerSec();
+  }
+  // leave one attendee
+  void decAttendee() {
+    if (numAttendee_ > 0) {
+      numAttendee_--;
+      recalcCostPerSec();
+    }
   }
   // advance one second
   void advanceSecond() {
@@ -150,6 +174,10 @@ public:
   uint32_t getTotalCost() const {
     return fpTotalCost_ >> 8;
   }
+  // get the number of attendee
+  uint32_t getAttendeeNum() const {
+    return numAttendee_;
+  }
 };
 CostCounter costCounter;
 
@@ -158,7 +186,7 @@ class Timer {
 public:
   // initialization
   void initialize() {
-    MsTimer2::set(250, Timer::tick);
+    MsTimer2::set(100, Timer::tick);
   }
   // start the timer
   void start() {
@@ -172,29 +200,104 @@ public:
   static void tick() {
     static uint8_t s_counter;
     ledPattern.tick();
-    if (s_counter == 3) {
+    if (s_counter == 9) {
       costCounter.advanceSecond();
       digitalWrite(13, HIGH);
+      s_counter = 0;
     } 
     else {
       digitalWrite(13, LOW);
+      s_counter++;
     }
-    s_counter = (s_counter + 1) & 3;
   }
 };
 Timer timer;
 
+// Controller class
+class Controller {
+public:
+  static const uint8_t kDecButtonPin = 14;
+  static const uint8_t kIncButtonPin = 15;
+  static const uint8_t kStartButtonPin = 16;
+  static const uint32_t kAlterDispDelay = 1500;
+  static const uint32_t kLongPress = 1500;
+  boolean prevDecButton_;    // previous state of the decrement button
+  boolean prevIncButton_;    // previous state of the increment button
+  uint32_t startButtonPressed_;
+  boolean running_;
+  uint32_t alterFrom_;       // delay counter for alternate display
+  // initialization
+  void initialize() {
+    digitalWrite(kDecButtonPin, HIGH);
+    digitalWrite(kIncButtonPin, HIGH);
+    digitalWrite(kStartButtonPin, HIGH);
+    prevDecButton_ = false;
+    prevIncButton_ = false;
+    startButtonPressed_ = 0;
+    running_ = false;
+    alterFrom_ = 0;
+  }
+  // update the status
+  void update() {
+    boolean decButton = (digitalRead(kDecButtonPin) == LOW);
+    boolean incButton = (digitalRead(kIncButtonPin) == LOW);
+    if (decButton && !prevDecButton_) {
+      costCounter.incAttendee();
+      alterFrom_ = millis();
+    } else if (incButton && !prevIncButton_) {
+      costCounter.decAttendee();
+      alterFrom_ = millis();
+    }
+    prevDecButton_ = decButton;
+    prevIncButton_ = incButton;
+    
+    boolean startButton = (digitalRead(kStartButtonPin) == LOW);
+    if (startButton) {
+      if (startButtonPressed_ == 0) {
+        startButtonPressed_ = millis();
+      } else if (millis() - startButtonPressed_ >= kLongPress) {
+        costCounter.reset();
+      }
+    } else if (startButtonPressed_ > 0) {
+      if (millis() - startButtonPressed_ >= kLongPress) {
+      } else {
+        if (running_) {
+          timer.stop();
+          running_ = false;
+        } else {
+          timer.start();
+          running_ = true;
+        }
+      }
+      startButtonPressed_ = 0;
+    }
+    
+    boolean alterDisp = false;
+    if (alterFrom_ > 0) {
+      if (millis() - alterFrom_ < kAlterDispDelay) {
+        alterDisp = true;
+      } else {
+        alterFrom_ = 0;
+      }
+    }
+    
+    if (alterDisp) {
+      display.setValue(costCounter.getAttendeeNum(), LedPattern::kAttrBlink);
+    } else {
+      display.setCostValue(costCounter.getTotalCost());
+    }
+  }
+};
+Controller controller;
+
 void setup() {
-  digitalWrite(14, HIGH);
-  digitalWrite(15, HIGH);
-  digitalWrite(16, HIGH);
   display.initialize();
   costCounter.initialize(5000, 6);
   timer.initialize();
-  timer.start();
+  controller.initialize();
 }
 
 void loop() {
   display.refresh();
-  display.setCostValue(costCounter.getTotalCost());
+  controller.update();
 }
