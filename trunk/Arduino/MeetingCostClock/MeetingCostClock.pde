@@ -226,100 +226,111 @@ int8_t TimerClass::prescaler_;
 
 TimerClass Timer;
 
-// Used to handle input events and control the other classes.
-class ControllerClass {
+// Receives and processes start and stop button events.
+class StartStopControllerClass {
 public:
-  // pin assignment
-  static const int8_t kDecButtonPin = 14;
-  static const int8_t kIncButtonPin = 15;
-  static const int8_t kStartButtonPin = 16;
-  
-  // delay time (in msec)
-  static const int32_t kAlterDelay = 1500;
-  static const int32_t kHoldDelay = 1500;
-  
-  // previous state of input devices
-  boolean prevDecButton_;
-  boolean prevIncButton_;
+  static const int8_t kButtonPin = 16;
+  static const int32_t kHoldTime = 1500;
 
-  // event history
-  int32_t timeStartButton_;   // time when start button was pressed down
-  int32_t timeAlterDisplay_;  // time when alternate display begins
-  
-  boolean running_;  // true when counter is running
+  int32_t timeButtonDown_;   // time when the button was pressed down
+  boolean running_;          // true while the counter is running
 
   void initialize() {
-    digitalWrite(kDecButtonPin, HIGH);
-    digitalWrite(kIncButtonPin, HIGH);
-    digitalWrite(kStartButtonPin, HIGH);
-    prevDecButton_ = false;
-    prevIncButton_ = false;
-    timeStartButton_ = 0;
-    timeAlterDisplay_ = 0;
+    digitalWrite(kButtonPin, HIGH);
+    timeButtonDown_ = 0;
     running_ = false;
   }
   
-  void processDecIncButton() {
-    boolean decButton = (digitalRead(kDecButtonPin) == LOW);
-    boolean incButton = (digitalRead(kIncButtonPin) == LOW);
-    if (decButton && !prevDecButton_) {
-      CostCounter.incAttendee();
-      timeAlterDisplay_ = millis();
-    } else if (incButton && !prevIncButton_) {
-      CostCounter.decAttendee();
-      timeAlterDisplay_ = millis();
-    }
-    prevDecButton_ = decButton;
-    prevIncButton_ = incButton;
-  }
-  
-  void processStartButton() {
-    boolean startButton = (digitalRead(kStartButtonPin) == LOW);
-    if (startButton) {
-      if (timeStartButton_ == 0) {
-        timeStartButton_ = millis();
-      } else if (millis() - timeStartButton_ >= kHoldDelay) {
+  void update() {
+    boolean button = (digitalRead(kButtonPin) == LOW);
+
+    if (button) {
+      if (timeButtonDown_ == 0) {
+        timeButtonDown_ = millis();
+      } else if (millis() - timeButtonDown_ >= kHoldTime) {
         if (running_) {
           Timer.stop();
           running_ = false;
         }
         CostCounter.reset();
       }
-    } else if (timeStartButton_ > 0) {
-      if (millis() - timeStartButton_ < kHoldDelay) {
+    } else if (timeButtonDown_ > 0) {
+      if (millis() - timeButtonDown_ < kHoldTime) {
         if (running_) Timer.stop(); else Timer.start();
         running_ = !running_;
       }
-      timeStartButton_ = 0;
-    }
-  }
-
-  void update() {
-    processDecIncButton();
-    processStartButton();
-    
-    if (timeAlterDisplay_ > 0 && millis() - timeAlterDisplay_ >= kAlterDelay) {
-      timeAlterDisplay_ = 0;
-    }
-    
-    if (timeAlterDisplay_ == 0) {
-      Display.showBill(CostCounter.getTotalCost());
-    } else {
-      Display.showNumber(CostCounter.numAttendee_, LEDChar.kAttrBlink);
+      timeButtonDown_ = 0;
     }
   }
 };
 
-ControllerClass Controller;
+StartStopControllerClass StartStopController;
+
+// Receives and processes increment/decrement button events.
+class IncDecControllerClass {
+public:
+  static const int8_t kDecButtonPin = 14;
+  static const int8_t kIncButtonPin = 15;
+  static const int32_t kDisplayDuration = 1500;
+
+  boolean prevDecButton_;  // previous state of input devices
+  boolean prevIncButton_;
+  int32_t timeDisplay_;    // time when display begins
+
+  void initialize() {
+    digitalWrite(kDecButtonPin, HIGH);
+    digitalWrite(kIncButtonPin, HIGH);
+    prevDecButton_ = false;
+    prevIncButton_ = false;
+    timeDisplay_ = 0;
+  }
+  
+  boolean isModified() const {
+    return millis() - timeDisplay_ < kDisplayDuration;
+  }
+  
+  void update() {
+    boolean decButton = (digitalRead(kDecButtonPin) == LOW);
+    boolean incButton = (digitalRead(kIncButtonPin) == LOW);
+
+    if (decButton && !prevDecButton_) {
+      // increment
+      CostCounter.incAttendee();
+      timeDisplay_ = millis();
+    } else if (incButton && !prevIncButton_) {
+      // decrement
+      CostCounter.decAttendee();
+      timeDisplay_ = millis();
+    }
+
+    if (timeDisplay_ > 0 && millis() - timeDisplay_ >= kDisplayDuration) {
+      timeDisplay_ = 0;
+    }
+
+    prevDecButton_ = decButton;
+    prevIncButton_ = incButton;
+  }
+};
+
+IncDecControllerClass IncDecController;
 
 void setup() {
   Display.initialize();
   CostCounter.initialize();
   Timer.initialize();
-  Controller.initialize();
+  StartStopController.initialize();
+  IncDecController.initialize();
 }
 
 void loop() {
+  StartStopController.update();
+  IncDecController.update();
+  
+  if (IncDecController.isModified()) {
+    Display.showNumber(CostCounter.numAttendee_, LEDChar.kAttrBlink);
+  } else {
+    Display.showBill(CostCounter.getTotalCost());
+  }
+  
   Display.onRefresh();
-  Controller.update();
 }
