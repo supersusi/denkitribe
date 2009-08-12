@@ -1,16 +1,19 @@
+// Meeting Cost Clock
+// 12 Aug 2009 Keijiro Takahashi
+
 #include <MsTimer2.h>
 
-// ** You can modify these value **
+// Configuration class - You can modify this.
 class Config {
 public:
-  // average of hourly wage of your company
+  // Average hourly wage of your company
   static const int kHourlyWage = 5000;
-  // default number of attendee of meetings
+  // Default number of attendee of meetings
   static const int kDefaultAttendee = 5;
 };
 
 // Used to generate a bit pattern with a given character.
-// This also processes blinking animation.
+// This is also used for character animation.
 class LEDCharClass {
 public:
   // * LED bit assignment
@@ -23,26 +26,22 @@ public:
   static const uint8_t kCharBlank  = 10;
   static const uint8_t kCharUscore = 11;
   // Attribute flgas
-  static const uint8_t kAttrDP     = 0x10;  // decimal point
+  static const uint8_t kAttrDP     = 0x10;  // Decimal point
   static const uint8_t kAttrBlink  = 0x20;
   
-  int8_t flasher_;
+  uint8_t flasher_;  // Uninitialized variable but no problem
 
-  LEDCharClass() {
-    flasher_ = 0;
-  }
-  
   uint8_t getBits(int8_t pos, uint8_t ch) const {
-    // blinking
+    // Blinking
     if ((ch & kAttrBlink) && (flasher_ & 1)) return 0;
-    // character
+    // Character
     static const uint8_t charPatterns[3][16] = {
-      {0xeb, 0x28, 0x67, 0x6e, 0xac, 0xce, 0xcf, 0xe8, 0xef, 0xee, 0, 0x2},
-      {0xde, 0x82, 0xec, 0xe6, 0xb2, 0x76, 0x7e, 0xd2, 0xfe, 0xf6, 0, 0x4},
-      {0xd7, 0x14, 0x73, 0x76, 0xb4, 0xe6, 0xe7, 0xd4, 0xf7, 0xf6, 0, 0x2}
+      {0xeb, 0x28, 0x67, 0x6e, 0xac, 0xce, 0xcf, 0xe8, 0xef, 0xee, 0, 2},
+      {0xde, 0x82, 0xec, 0xe6, 0xb2, 0x76, 0x7e, 0xd2, 0xfe, 0xf6, 0, 4},
+      {0xd7, 0x14, 0x73, 0x76, 0xb4, 0xe6, 0xe7, 0xd4, 0xf7, 0xf6, 0, 2}
     };
     uint8_t bits = charPatterns[pos][ch & 0xf];
-    // decimal point
+    // Decimal point
     if (ch & kAttrDP) {
       static const uint8_t dpPatterns[3] = {0x10, 0x01, 0x08};
       bits |= dpPatterns[pos];
@@ -57,24 +56,21 @@ public:
 
 LEDCharClass LEDChar;
 
-// Used to controlls the display via digital output pins.
+// Used to controls the display via digital pins.
+// This converts numerical values into digit characters.
 class DisplayClass {
 public:
-  static const int8_t kCathodePin = 2;  // the first cathode pin
-  static const int8_t kAnodePin = 10;   // the first anode pin
+  static const int8_t kCathodePin = 2;  // 1st cathode pin
+  static const int8_t kAnodePin = 10;   // 1st anode pin
 
-  uint8_t digits_[3];  // digit buffer
-  int8_t refresher_;   // refresh counter
+  uint8_t digits_[3];  // Digit buffer
+  int8_t refresher_;   // Refresh counter
 
   void initialize() {
     digits_[0] = digits_[1] = digits_[2] = 0;
     refresher_ = 0;
-    for (int8_t i = 0; i < 8; ++i) {
-      digitalWrite(kCathodePin + i, LOW);
-    }
-    for (int8_t i = 0; i < 3; ++i) {
-      digitalWrite(kAnodePin + i, HIGH);
-    }
+    for (int8_t i = 0; i < 8; ++i) digitalWrite(kCathodePin + i, LOW);
+    for (int8_t i = 0; i < 3; ++i) digitalWrite(kAnodePin + i, HIGH);
   }
   
   // Set the digits individually
@@ -87,15 +83,18 @@ public:
   // Show a numerical value on the display
   void showNumber(int16_t num, uint8_t attr = 0) {
     if (num < 10) {
-      setDigits(num % 10 | attr, LEDChar.kCharBlank, LEDChar.kCharBlank);
-    } 
-    else if (num < 100) {
-      setDigits(num % 10 | attr, num % 100 / 10 | attr, LEDChar.kCharBlank);
-    } 
-    else if (num < 1000) {
-      setDigits(num % 10 | attr, num % 100 / 10 | attr, num % 1000 / 100 | attr);
-    } 
-    else {
+      setDigits(attr | (num % 10),
+                LEDChar.kCharBlank,
+                LEDChar.kCharBlank);
+    } else if (num < 100) {
+      setDigits(attr | (num % 10),
+                attr | (num % 100) / 10,
+                LEDChar.kCharBlank);
+    } else if (num < 1000) {
+      setDigits(attr | (num % 10),
+                attr | (num % 100 / 10),
+                attr | (num % 1000 / 100));
+    } else {
       uint8_t ch = 9 | LEDChar.kAttrBlink;
       setDigits(ch, ch, ch);
     }
@@ -104,19 +103,24 @@ public:
   // Show an amount of money on the display
   void showBill(int32_t num) {
     if (num < 100L) {
-      setDigits(num % 10, num % 100 / 10, LEDChar.kCharUscore);
-    } 
-    else if (num < 10L * 10000) {
+      setDigits(num % 10,
+                num % 100 / 10,
+                LEDChar.kCharUscore);
+    } else if (num < 10L * 10000) {
       int16_t temp = num / 100;
-      setDigits(temp % 10, temp % 100 / 10, (temp % 1000 / 100) | LEDChar.kAttrDP);
-    } 
-    else if (num < 100L * 10000) {
+      setDigits(temp % 10,
+                temp % 100 / 10,
+                (temp % 1000 / 100) | LEDChar.kAttrDP);
+    } else if (num < 100L * 10000) {
       int16_t temp = num / 1000;
-      setDigits(temp % 10, (temp % 100 / 10) | LEDChar.kAttrDP, temp % 1000 / 100);
-    } 
-    else if (num < 1000L * 10000) {
+      setDigits(temp % 10,
+                (temp % 100 / 10) | LEDChar.kAttrDP,
+                temp % 1000 / 100);
+    } else if (num < 1000L * 10000) {
       int16_t temp = num / 10000;
-      setDigits(temp % 10, temp % 100 / 10, temp % 1000 / 100);
+      setDigits(temp % 10,
+                temp % 100 / 10,
+                temp % 1000 / 100);
     } else {
       uint8_t ch = 9 | LEDChar.kAttrBlink;
       setDigits(ch, ch, ch);
@@ -124,17 +128,17 @@ public:
   }
   
   void onRefresh() {
-    // turn off the selected digit
+    // turn off the current digit
     pinMode(kAnodePin + refresher_, INPUT);
     // advance the refresher
     refresher_ = (refresher_ == 2) ? 0 : refresher_ + 1;
-    // generate a pattern for the selected digit
+    // generate a bit pattern for the current digit
     uint8_t pattern = LEDChar.getBits(refresher_, digits_[refresher_]);
     // switch the LEDs
     for (uint8_t i = 0, bit = 1; i < 8; ++i, bit <<= 1) {
       pinMode(kCathodePin + i, (pattern & bit) ? OUTPUT : INPUT);
     }
-    // turn on the selected digit
+    // turn on the current digit
     pinMode(kAnodePin + refresher_, OUTPUT);
     // minimum wait
     delay(1);
@@ -146,11 +150,11 @@ DisplayClass Display;
 // Used to sum up the cost of meeting.
 class CostCounterClass {
 public:
-  int8_t numAttendee_;    // number of attendee of the meeting
-
-  // these values are stored as a fixed point number (8 bit fractinal)
-  int32_t fpCostPerSec_;  // cost per second
-  int32_t fpTotalCost_;   // total cost
+  int8_t numAttendee_;    // Number of attendee of the meeting
+  
+  // The variables below are stored as fixed-point value (8-bit fractional)
+  int32_t fpCostPerSec_;  // Cost per second
+  int32_t fpTotalCost_;   // Total cost
 
   void initialize() {
     numAttendee_ = Config::kDefaultAttendee;
@@ -186,36 +190,46 @@ public:
 
 CostCounterClass CostCounter;
 
-// Used to controll the timer device and receive timer events.
+// Used to handle timer interrupts and make heartbeat.
+// Interruption period is set to 0.1 sec for blink animation.
 class TimerClass {
 public:
+  static const int8_t kClockDivider = 10;
+  static const int8_t kHeartbeatPin = 13;
+
   static boolean running_;
   static int8_t prescaler_;
 
   void initialize() {
     running_ = false;
     prescaler_ = 0;
-    MsTimer2::set(100, onTick);
+    // Prepare the heartbeat
+    pinMode(kHeartbeatPin, OUTPUT);
+    // Boot up the timer
+    MsTimer2::set(1000 / kClockDivider, onTick);
     MsTimer2::start();
   }
 
   void start() {
     running_ = true;
-    digitalWrite(13, HIGH);
+    // The first heartbeat
+    digitalWrite(kHeartbeatPin, HIGH);
   }
   void stop() {
     running_ = false;
+    // Cancel prescaling
     prescaler_ = 0;
   }
 
   static void onTick() {
     LEDChar.onTick();
-    if (prescaler_ == 9) {
+    if (prescaler_ == kClockDivider - 1) {
+      // One second elapsed
       CostCounter.advanceSecond();
-      digitalWrite(13, HIGH);
+      digitalWrite(kHeartbeatPin, HIGH);
       prescaler_ = 0;
     } else {
-      digitalWrite(13, LOW);
+      digitalWrite(kHeartbeatPin, LOW);
       if (running_) prescaler_++;
     }
   }
@@ -226,28 +240,28 @@ int8_t TimerClass::prescaler_;
 
 TimerClass Timer;
 
-// Receives and processes start and stop button events.
-class StartStopControllerClass {
+// Used to handle start/stop button events.
+class StartStopHandlerClass {
 public:
   static const int8_t kButtonPin = 16;
-  static const int32_t kHoldTime = 1500;
+  static const int32_t kHoldTime = 1500;  // To detect holding-downs
 
-  int32_t timeButtonDown_;   // time when the button was pressed down
-  boolean running_;          // true while the counter is running
+  int32_t timeButtonDown_;   // Time when the button was pressed down
+  boolean running_;          // True while the counter is running
 
   void initialize() {
-    digitalWrite(kButtonPin, HIGH);
     timeButtonDown_ = 0;
     running_ = false;
+    digitalWrite(kButtonPin, HIGH);
   }
   
   void update() {
-    boolean button = (digitalRead(kButtonPin) == LOW);
-
-    if (button) {
+    if (digitalRead(kButtonPin) == LOW) {
       if (timeButtonDown_ == 0) {
+        // Start pressing
         timeButtonDown_ = millis();
       } else if (millis() - timeButtonDown_ >= kHoldTime) {
+        // Held down; stop and reset
         if (running_) {
           Timer.stop();
           running_ = false;
@@ -255,6 +269,7 @@ public:
         CostCounter.reset();
       }
     } else if (timeButtonDown_ > 0) {
+      // Switch the timer if short pressing
       if (millis() - timeButtonDown_ < kHoldTime) {
         if (running_) Timer.stop(); else Timer.start();
         running_ = !running_;
@@ -264,29 +279,30 @@ public:
   }
 };
 
-StartStopControllerClass StartStopController;
+StartStopHandlerClass StartStopHandler;
 
-// Receives and processes increment/decrement button events.
-class IncDecControllerClass {
+// Used to handle inc/dec button events.
+class IncDecHandlerClass {
 public:
   static const int8_t kDecButtonPin = 14;
   static const int8_t kIncButtonPin = 15;
-  static const int32_t kDisplayDuration = 1500;
+  static const int32_t kDisplayDuration = 1500; // Duration of attendee display
 
-  boolean prevDecButton_;  // previous state of input devices
+  boolean prevDecButton_;  // Previous state of buttons
   boolean prevIncButton_;
-  int32_t timeDisplay_;    // time when display begins
+  int32_t timeDisplay_;    // Time when attendee display begins
 
   void initialize() {
-    digitalWrite(kDecButtonPin, HIGH);
-    digitalWrite(kIncButtonPin, HIGH);
     prevDecButton_ = false;
     prevIncButton_ = false;
     timeDisplay_ = 0;
+    digitalWrite(kDecButtonPin, HIGH);
+    digitalWrite(kIncButtonPin, HIGH);
   }
   
-  boolean isModified() const {
-    return millis() - timeDisplay_ < kDisplayDuration;
+  boolean isAttendeeDisplayActive() const {
+    return timeDisplay_ > 0 &&
+           millis() - timeDisplay_ < kDisplayDuration;
   }
   
   void update() {
@@ -303,7 +319,9 @@ public:
       timeDisplay_ = millis();
     }
 
-    if (timeDisplay_ > 0 && millis() - timeDisplay_ >= kDisplayDuration) {
+    if (timeDisplay_ > 0 &&
+        millis() - timeDisplay_ >= kDisplayDuration) {
+      // Terminate attendee display
       timeDisplay_ = 0;
     }
 
@@ -312,21 +330,21 @@ public:
   }
 };
 
-IncDecControllerClass IncDecController;
+IncDecHandlerClass IncDecHandler;
 
 void setup() {
   Display.initialize();
   CostCounter.initialize();
   Timer.initialize();
-  StartStopController.initialize();
-  IncDecController.initialize();
+  StartStopHandler.initialize();
+  IncDecHandler.initialize();
 }
 
 void loop() {
-  StartStopController.update();
-  IncDecController.update();
-  
-  if (IncDecController.isModified()) {
+  StartStopHandler.update();
+  IncDecHandler.update();
+
+  if (IncDecHandler.isAttendeeDisplayActive()) {
     Display.showNumber(CostCounter.numAttendee_, LEDChar.kAttrBlink);
   } else {
     Display.showBill(CostCounter.getTotalCost());
