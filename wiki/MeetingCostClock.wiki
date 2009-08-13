@@ -84,4 +84,4 @@ http://farm4.static.flickr.com/3539/3818047720_4a2a6ed199_o.png
 http://farm3.static.flickr.com/2443/3814271641_2db01ac4a9.jpg
 
 == プログラム ==
-ソースコードをリポジトリの [http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/MeetingCostClock/ trunk/Arduino/MeetingCostClock] から取得して，ビルドしてください。ファイルはひとつしかありませんので，[http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/MeetingCostClock/MeetingCostClock.pde こちら]からコピペするのが手っ取り早いと思います。
+ソースコードをリポジトリの [http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/MeetingCostClock/ trunk/Arduino/MeetingCostClock] から取得して，ビルドしてください。ファイルはひとつしかありませんので，[http://denkitribe.googlecode.com/svn/trunk/Arduino/MeetingCostClock/MeetingCostClock.pde こちら]からコピペするのが手っ取り早いと思います。
