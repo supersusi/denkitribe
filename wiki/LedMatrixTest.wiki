@@ -13,3 +13,5 @@ LED マトリクスは配線が複雑なため，ブレッドボード上での�
 
 == 水面エフェクト ==
 <wiki:video url="http://www.youtube.com/watch?v=husfySm5MdY"/>
+
+[http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/LedPond/LedPond.pde ソースコード]
