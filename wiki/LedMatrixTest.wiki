@@ -10,3 +10,6 @@ http://farm3.static.flickr.com/2606/3834352802_5f0e2f14f8_m.jpg
 http://farm3.static.flickr.com/2558/3834353106_af8deb49a3_m.jpg
 
 LED マトリクスは配線が複雑なため，ブレッドボード上での実験には無理があると考え，実験用のシールドを製作することにした。やはり配線がひどく面倒だった。
+
+== 水面エフェクト ==
+<wiki:video url="http://www.youtube.com/watch?v=husfySm5MdY"/>
