@@ -1,11 +1,11 @@
 #include <LedControl.h>
 
-// Used to handle an LED matrix as a screen
+// Used to handle an LED matrix as a 2D screen
 class DisplayBufferClass {
 public:
   LedControl led_;     // MAX7219 controller
 
-  int8_t rows_[3][8];  // screen (row) buffer
+  int8_t rows_[3][8];  // screen buffer (3 layers x  8 rows)
   int8_t selector_;    // layer selector
   
   DisplayBufferClass()
@@ -38,16 +38,16 @@ public:
     for (int8_t row = 0; row < 8; ++row) {
       led_.setRow(0, row, rows_[selector_][row]);
     }
-    // set the intensity
+    // set new intensity
     if (selector_ == 1) {
       led_.setIntensity(0, 3);
     } else if (selector_ == 2) {
       led_.setIntensity(0, 15);
     }
-    // advance the layer selector
+    // advance to the layer selector
     selector_ = (selector_ == 2) ? 0 : selector_ + 1;
     // minimum wait
-    delay(1);
+    delay(2);
   }
 };
 
@@ -58,10 +58,10 @@ class WaterSurfaceClass {
 public:
   static const int8_t kSize = 8;  // surface size (width and height)
   
-  // surface height map type
+  // surface height map
   typedef int16_t HeightMap[kSize + 2][kSize + 2]; 
 
-  HeightMap maps_[2];    // height maps
+  HeightMap maps_[2];    // height maps (double buffer)
   int8_t selector_;      // index of the current height map
   
   WaterSurfaceClass()
@@ -129,22 +129,25 @@ void setup(){
 }
 
 void loop(){
-  int8_t x = random(8);
-  int8_t y = random(8);
-  
-  Water.setHeight(x, y, 2000);
-  updateFrame();
-  Water.setHeight(x, y, 3000);
-  updateFrame();
-  Water.setHeight(x, y, 6000);
-  updateFrame();
-  Water.setHeight(x, y, 3000);
-  updateFrame();
-  Water.setHeight(x, y, 2000);
-  updateFrame();
-  
-  for (int8_t i = 0; i < 100; ++i) {
+  if (analogRead(0) > 2) {
+    int8_t x = random(1, 7);
+    int8_t y = random(1, 7);
+    
+    Water.setHeight(x, y, 2000);
     updateFrame();
+    Water.setHeight(x, y, 3000);
+    updateFrame();
+    Water.setHeight(x, y, 6000);
+    updateFrame();
+    Water.setHeight(x, y, 3000);
+    updateFrame();
+    Water.setHeight(x, y, 2000);
+    updateFrame();
+    
+    for (int8_t i = 0; i < 20; ++i) {
+      updateFrame();
+    }
   }
+  updateFrame();
 }
 
