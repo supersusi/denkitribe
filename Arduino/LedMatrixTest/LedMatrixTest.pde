@@ -34,6 +34,7 @@ public:
       lines_[level - 1][col] |= 1 << ((row - 1) & 7);
     }
   }
+  
 private:
   static LedControl led_;      // MAX7219 driver
   static uint8_t lines_[7][8]; // 7 layers x 8 lines
@@ -68,9 +69,7 @@ void setup(){
 
 void loop(){
   static int8_t offs;
-  
   Display.clear();
-  
   for (int8_t row = 0; row < 8; ++row) {
     for (int8_t col = 0; col < 8; ++col) {
       if (row + col < 8) {
@@ -80,7 +79,6 @@ void loop(){
       }
     }
   }
-  
   delay(500);
   offs++;
 }
