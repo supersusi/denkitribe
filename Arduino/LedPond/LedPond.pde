@@ -1,57 +1,67 @@
 #include <LedControl.h>
+#include <TimerOne.h>
 
-// Used to handle an LED matrix as a 2D screen
-class DisplayBufferClass {
+// LED Dislay class
+//
+// Used to handle an LED matrix as a display via MAX7219.
+// You can specify the brightness level of each of the
+// pixels individually (in seven levels).
+//
+// This class uses TIMER1 with TimerOne library.
+class LedDisplayClass {
 public:
-  LedControl led_;     // MAX7219 controller
-
-  int8_t rows_[3][8];  // screen buffer (3 layers x  8 rows)
-  int8_t selector_;    // layer selector
-  
-  DisplayBufferClass()
-  : led_(2, 4, 3, 1),  // DIN, CLK, LOAD, cascading
-    selector_(0) {
-    clear();
-  }
-  
   void initialize() {
-    led_.shutdown(0, false);
+    selector_ = 0;
+    clear();
+    // Start the timer
+    Timer1.initialize(3164);
+    // Timer1.initialize(3955);
+    Timer1.attachInterrupt(refresh);
   }
   
   void clear() {
-    for (int8_t layer = 0; layer < 3; ++layer) {
-      for (int8_t row = 0; row < 8; ++row) {
-        rows_[layer][row] = 0;
+    for (int8_t layer = 0; layer < 7; ++layer) {
+      for (int8_t line = 0; line < 8; ++line) {
+        lines_[layer][line] = 0;
       }
     }
   }
   
-  void setPixel(int8_t col, int8_t row, int8_t level) {
-    if (level == 0) return;
-    rows_[level - 1][row] |= (col == 0) ? 0x80 : 1 << (col - 1);
+  void write(int8_t col, int8_t row, int8_t level) {
+    if (level > 0) {
+      // I mistakenly soldered the DP pin to MSB,
+      // so I have to rotate one bit.
+      lines_[level - 1][col] |= 1 << ((row - 1) & 7);
+    }
   }
   
-  void update() {
-    // darken the screen while update
-    led_.setIntensity(0, 0);
-    // update the screen
-    for (int8_t row = 0; row < 8; ++row) {
-      led_.setRow(0, row, rows_[selector_][row]);
+private:
+  static LedControl led_;      // MAX7219 driver
+  static uint8_t lines_[7][8]; // 7 layers x 8 lines
+  static int8_t selector_;     // layer selector
+
+  static void refresh() {
+    // Shutdown the screen while update
+    led_.shutdown(0, true);
+    // Update the screen
+    for (int8_t line = 0; line < 8; ++line) {
+      led_.setRow(0, line, lines_[selector_][line]);
     }
-    // set new intensity
-    if (selector_ == 1) {
-      led_.setIntensity(0, 3);
-    } else if (selector_ == 2) {
-      led_.setIntensity(0, 15);
-    }
-    // advance to the layer selector
-    selector_ = (selector_ == 2) ? 0 : selector_ + 1;
-    // minimum wait
-    delay(2);
+    // Set new intensity
+    static const int8_t tonemap[7] = {0, 1, 2, 3, 6, 10, 15};
+    led_.setIntensity(0, tonemap[selector_]);
+    // Turn on the screen
+    led_.shutdown(0, false);
+    // Advance the layer selector
+    selector_ = (selector_ == 6) ? 0 : selector_ + 1;
   }
 };
 
-DisplayBufferClass Display;
+LedControl LedDisplayClass::led_(2, 4, 3, 1); // DIN, CLK, LOAD
+uint8_t LedDisplayClass::lines_[7][8];
+int8_t LedDisplayClass::selector_;
+
+LedDisplayClass Display;
 
 // 2D water surface simulator class
 class WaterSurfaceClass {
@@ -88,7 +98,7 @@ public:
         int32_t h = front[y][x - 1] + front[y - 1][x] +
                     front[y][x + 1] + front[y + 1][x];
         h -= back[y][x] << 1;
-        h -= (h >> 5);
+        h -= (h >> 4);
         back[y][x] = h >> 1;
       }
     }
@@ -102,12 +112,10 @@ public:
     for (int8_t y = 0; y < kSize; ++y) {
       for (int8_t x = 0; x < kSize; ++x) {
         int16_t h = front[y + 1][x + 1];
-        if (h >= 1200) {
-          Display.setPixel(x, y, 3);
-        } else if (h >= 800) {
-          Display.setPixel(x, y, 2);
-        } else if (h >= 400) {
-          Display.setPixel(x, y, 1);
+        if (h >= 30 + (7 << 6)) {
+          Display.write(x, y, 7);
+        } else if (h > 30) {
+          Display.write(x, y, ((h - 30) >> 6) & 7);
         }
       }
     }
@@ -119,9 +127,7 @@ WaterSurfaceClass Water;
 void updateFrame() {
   Water.update();
   Water.display();
-  for (int8_t i = 0; i < 6; ++i) {
-    Display.update();
-  }
+  delay(20);
 }
 
 void setup(){
@@ -130,18 +136,14 @@ void setup(){
 
 void loop(){
   if (analogRead(0) > 2) {
-    int8_t x = random(1, 7);
-    int8_t y = random(1, 7);
+    int8_t x = random(8);
+    int8_t y = random(8);
     
-    Water.setHeight(x, y, 2000);
-    updateFrame();
-    Water.setHeight(x, y, 3000);
+    Water.setHeight(x, y, 4000);
     updateFrame();
     Water.setHeight(x, y, 6000);
     updateFrame();
-    Water.setHeight(x, y, 3000);
-    updateFrame();
-    Water.setHeight(x, y, 2000);
+    Water.setHeight(x, y, 4000);
     updateFrame();
     
     for (int8_t i = 0; i < 20; ++i) {
