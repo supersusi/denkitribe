@@ -19,6 +19,19 @@ http://farm4.static.flickr.com/3439/3837345726_566d1fd240_m.jpg
 段階を増やせば増やすほど全体の輝度が落ち，フリッカーも激しくなる。４段階ぐらいが限界と思われる。
 
 == 水面エフェクト ==
+古典的な水面エフェクトを実装してみた。
+
 <wiki:video url="http://www.youtube.com/watch?v=husfySm5MdY"/>
 
+次にピエゾ素子を導入し，本体を叩くことで水面に波が立つようにしてみた。
+
+<wiki:video url="http://www.youtube.com/watch?v=4bieluRJAqA"/>
+
 [http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/LedPond/LedPond.pde ソースコード]
+
+== 独立輝度調整テスト・その２ ==
+タイマー割り込みを導入したうえで割り込み間隔を微調整することで，段階を増やしつつフリッカーを軽減することが可能になった。
+
+http://farm3.static.flickr.com/2668/3851931134_4ec69a92ce_m.jpg
+
+[http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/LedMatrixTest/LedMatrixTest.pde ソースコード]
