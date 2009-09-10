@@ -1,5 +1,11 @@
 Sorry, this page is under construction.
 
+== Source code ==
+http://code.google.com/p/denkitribe/source/browse/#svn/trunk/Arduino/SynthGlove
+
+== Schematic ==
+[http://www.flickr.com/photos/35498631@N03/3902490972/ http://farm4.static.flickr.com/3460/3902490972_18dac53416_o.jpg]
+
 == Overview ==
 [http://www.flickr.com/photos/35498631@N03/3891694607/ http://farm3.static.flickr.com/2556/3891694607_0666b09e82.jpg]
 
@@ -18,9 +24,6 @@ Sorry, this page is under construction.
 
 == Assembling ==
 [http://www.flickr.com/photos/35498631@N03/3889154127/ http://farm3.static.flickr.com/2494/3889154127_d636350b06_m.jpg]
-
-== Schematic ==
-[http://www.flickr.com/photos/35498631@N03/3902490972/ http://farm4.static.flickr.com/3460/3902490972_18dac53416_o.jpg]
 
 == Calibration ==
 [http://www.flickr.com/photos/35498631@N03/3896626842/ http://farm3.static.flickr.com/2519/3896626842_38dfc62d95_m.jpg]
