@@ -1,5 +1,3 @@
-#Synth**Glove - Power Glove based MIDI controller
-
 Sorry, this page is under construction.
 
 == Overview ==
