@@ -1,4 +1,4 @@
-ブレッドボードシーケンサーの説明予定地
+ブレッドボードシーケンサーのサポートページ
 
 ==ソースコード==
 http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/BBSeq/BBSeq.pde
