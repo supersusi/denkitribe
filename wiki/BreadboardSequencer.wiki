@@ -1,9 +1,11 @@
 ブレッドボードシーケンサーのサポートページ
 
 ==ソースコード==
+下記のリンクから入手してください。
+
 http://code.google.com/p/denkitribe/source/browse/trunk/Arduino/BBSeq/BBSeq.pde
 
-コンパイルには Timer1 ライブラリが必要です。以下のリンクから入手しインストールしてください。
+コンパイルには Timer1 ライブラリが必要です。下記のリンクから入手しインストールしておいてください。
 
 http://www.arduino.cc/playground/Code/Timer1
 
