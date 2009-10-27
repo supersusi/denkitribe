@@ -27,17 +27,17 @@ void sendNote() {
   delayMicroseconds(50);
   // ノートオフの送信
   if (prevNote >= 0) {
-    Serial.print(0x80 + kChannel, BYTE);
-    Serial.print(prevNote, BYTE);
-    Serial.print(kVelocity, BYTE);
+    Serial.write(0x80 + kChannel);
+    Serial.write(prevNote);
+    Serial.write(kVelocity);
   }
   // 音の取得
   int note = pitchArray[(analogRead(0) * kNumPitch + 512) / 1024];
   if (note >= 0) {
     // ノートオンの送信
-    Serial.print(0x90 + kChannel, BYTE);
-    Serial.print(note, BYTE);
-    Serial.print(kVelocity, BYTE);
+    Serial.write(0x90 + kChannel);
+    Serial.write(note);
+    Serial.write(kVelocity);
   }
   // 次のステップへ進む
   currentStep = (currentStep + 1) & 0xf;
@@ -52,7 +52,7 @@ void tick() {
     tickCount = 0;
   } else {
     // タイミングクロックの送信
-    Serial.print(0xf8, BYTE);
+    Serial.write(0xf8);
     // ６回毎に１音処理（１６分音符）
     if (++tickCount == 6) {
       sendNote();
@@ -74,13 +74,13 @@ void setup() {
   // シリアル通信の初期化 (31.250 kbps).
   Serial.begin(31250);
   // 「オールノートオフ」メッセージ
-  Serial.print(0xb0 + kChannel, BYTE);
-  Serial.print(0x7b, BYTE);
-  Serial.print(0x00, BYTE);
+  Serial.write(0xb0 + kChannel);
+  Serial.write(0x7b);
+  Serial.write(byte(0));
   // 「スタート」メッセージ
-  Serial.print(0xfa, BYTE);
+  Serial.write(0xfa);
   // 最初のタイミングクロック
-  Serial.print(0xf8, BYTE);
+  Serial.write(0xf8);
   // タイマー割り込みの初期化
   Timer1.initialize(60L * 1000 * 1000 / (kBpm * 24));
   Timer1.attachInterrupt(tick);
