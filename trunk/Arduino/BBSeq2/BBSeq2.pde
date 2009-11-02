@@ -6,76 +6,81 @@
 
 // BPM settings.
 const int kBpmMin = 80;
-const int kBpmMax = 130;
+const int kBpmMax = 180;
 
 // Number of the pitch lines.
 const int kNumPitch = 22;
 
 // MIDI settings
-const int kChannelA = 0;
-const int kChannelB = 1;
-const int kChannelCC = 2;
-const int kVelocity = 100;
+const int kChannelA = 0;    // For instrument A.
+const int kChannelB = 1;    // For instrument B.
+const int kChannelC = 2;    // For CC messages.
 
-// Used to process a sequencer with a multiplexer.
+class InstrumentClass {
+public:
+  static const int kVelocity = 100;
+  
+  const int channel_;
+  int lastNoteNum_;
+  
+  InstrumentClass(int channel)
+  : channel_(channel),
+    lastNoteNum_(0) {}
+  
+  void sendNote(int pitchIndex) {
+    endNote();
+    if (pitchIndex > 0) {
+      lastNoteNum_ = Scale.pickPitch(pitchIndex - 1);
+      MidiOut.sendNoteOn(channel_, lastNoteNum_, kVelocity);
+    } else {
+      lastNoteNum_ = -1;
+    }
+  }
+  
+  void endNote() {
+    if (lastNoteNum_ >= 0) {
+      MidiOut.sendNoteOff(channel_, lastNoteNum_, kVelocity);
+      lastNoteNum_ = -1;
+    }
+  }
+};
+
 class SequencerClass {
 public:
-  const int kChannel_;
-  const int kInputPort_;
-  
+  const int inputPort_;
+  int length_;
   int stepPos_;
-  int prevNote_;
   
-  SequencerClass(int channel, int inputPort)
-  : kChannel_(channel),
-    kInputPort_(inputPort),
-    stepPos_(0),
-    prevNote_(-1) {
+  SequencerClass(int inputPort)
+  : inputPort_(inputPort),
+    length_(16),
+    stepPos_(0) {
     pinMode(10, OUTPUT);
     pinMode(11, OUTPUT);
     pinMode(12, OUTPUT);
     pinMode(13, OUTPUT);
   }
   
-  void stopAndReset() {
-    // Send a note off message
-    if (prevNote_ >= 0) {
-      MidiOut.sendNoteOff(kChannel_, prevNote_, kVelocity);
-    }
-    // Reset the status.
+  void reset() {
     stepPos_ = 0;
-    prevNote_ = -1;
   }
   
-  void readAndSendNote() {
-    // Set the multiplexer.
-    int select = 0xf - stepPos_;
-    digitalWrite(13, (select & 1) ? HIGH : LOW);
-    digitalWrite(12, (select & 2) ? HIGH : LOW);
-    digitalWrite(11, (select & 4) ? HIGH : LOW);
-    digitalWrite(10, (select & 8) ? HIGH : LOW);
-    delayMicroseconds(50);
-    // Send a note off message.
-    if (prevNote_ >= 0) {
-      MidiOut.sendNoteOff(kChannel_, prevNote_, kVelocity);
+  int fetchNote() {
+    int pitchIndex = 0;
+    if (stepPos_ < 16) {
+      int select = 15 - stepPos_;
+      digitalWrite(13, (select & 1) ? HIGH : LOW);
+      digitalWrite(12, (select & 2) ? HIGH : LOW);
+      digitalWrite(11, (select & 4) ? HIGH : LOW);
+      digitalWrite(10, (select & 8) ? HIGH : LOW);
+      delayMicroseconds(50);
+      analogRead(inputPort_); // Dummy read
+      pitchIndex = (analogRead(inputPort_) * kNumPitch + 512) >> 10;
     }
-    // Fetch a note from the multiplexer.
-    analogRead(kInputPort_); // Dummy read
-    int index = (analogRead(kInputPort_) * kNumPitch + 512) >> 10;
-    int note = (index == 0) ? -1 : Scale.pickPitch(index);
-    if (note >= 0) {
-      // Send a note on message.
-      MidiOut.sendNoteOn(kChannel_, note, kVelocity);
-    }
-    // Advance the step position.
-    stepPos_ = (stepPos_ + 1) & 0xf;
-    prevNote_ = note;
+    if (++stepPos_ >= length_) stepPos_ = 0;
+    return pitchIndex;
   }
 };
-
-// Sequencer instances.
-SequencerClass SequencerA(kChannelA, 4);
-SequencerClass SequencerB(kChannelB, 5);
 
 // Used to track the timer.
 class TimerClass {
@@ -119,7 +124,6 @@ void TimerTickFunction() {
   Timer.tick();
 }
 
-
 // Used to observe a knob.
 class KnobInputClass : public AnalogInputClass<KnobInputClass> {
   public:
@@ -138,6 +142,10 @@ class SliderInputClass : public AnalogInputClass<SliderInputClass> {
   }
 };
 
+InstrumentClass InstrumentA(kChannelA);
+InstrumentClass InstrumentB(kChannelB);
+SequencerClass SequencerA(4);
+SequencerClass SequencerB(5);
 DigitalInputClass Master(4);
 DigitalInputClass SwitchA(5);
 DigitalInputClass SwitchB(6);
@@ -148,11 +156,25 @@ KnobInputClass KnobB(1);
 KnobInputClass KnobC(2);
 SliderInputClass BpmSlider(3);
 
-void setup() {
+int getSwitchValue() {
+  return (SwitchA.state_ ? 1 : 0) + (SwitchB.state_ ? 2 : 0);
+}
+int sequenceMode;
+
+void sayHello() {
   pinMode(3, OUTPUT);
+  for (int i = 0; i < 0x180; ++i) {
+    analogWrite(3, i & 127);
+    delay(1);
+  }
+}
+
+void setup() {
   MidiOut.initialize();
   MidiOut.sendAllNoteOff(kChannelA);
   MidiOut.sendAllNoteOff(kChannelB);
+  sayHello();
+  sequenceMode = getSwitchValue();
   Timer1.initialize(Timer.calcPeriod(BpmSlider.value_));
 }
 
@@ -164,8 +186,31 @@ void loop() {
   }
   // Drive the sequencers.
   if (Timer.noteReady_) {
-    SequencerA.readAndSendNote();
-    SequencerB.readAndSendNote();
+    if (SequencerA.stepPos_ == 0) {
+      int input = getSwitchValue();
+      if (sequenceMode != input) {
+        sequenceMode = input;
+        SequencerB.reset();
+        InstrumentB.endNote();
+        if (sequenceMode == 0) {
+          SequencerA.length_ = 16;
+          SequencerB.length_ = 16;
+        } else if (sequenceMode == 3) {
+          SequencerA.length_ = 32;
+          SequencerB.length_ = 32;
+          SequencerB.stepPos_ = 16;
+        } else {
+          SequencerA.length_ = 16;
+          SequencerB.length_ = 12;
+        }
+      }
+    }
+    if (sequenceMode < 2) {
+      InstrumentA.sendNote(SequencerA.fetchNote());
+      InstrumentB.sendNote(SequencerB.fetchNote());
+    } else {
+      InstrumentA.sendNote(SequencerA.fetchNote() + SequencerB.fetchNote());
+    }
     Timer.noteReady_ = false;
   }
   // Master control.
@@ -183,8 +228,10 @@ void loop() {
       Timer.reset();
       // Reset the sequencer.
       MidiOut.sendStop();
-      SequencerA.stopAndReset();
-      SequencerB.stopAndReset();
+      InstrumentA.endNote();
+      InstrumentB.endNote();
+      SequencerA.reset();
+      SequencerB.reset();
     }
   }
   // Switches.
@@ -192,20 +239,20 @@ void loop() {
   SwitchB.update();
   // Buttons.
   if (ButtonA.update()) {
-    MidiOut.sendCC(kChannelCC, 31, ButtonA.state_ ? 127 : 0); // CC#31
+    MidiOut.sendCC(kChannelC, 31, ButtonA.state_ ? 127 : 0); // CC#31
   }
   if (ButtonB.update()) {
-    MidiOut.sendCC(kChannelCC, 30, ButtonB.state_ ? 127 : 0); // CC#30
+    MidiOut.sendCC(kChannelC, 30, ButtonB.state_ ? 127 : 0); // CC#30
   }
   // Knobs.
   if (KnobA.update()) {
-    MidiOut.sendCC(kChannelCC, 32, KnobA.value_); // CC#32
+    MidiOut.sendCC(kChannelC, 32, KnobA.value_); // CC#32
   }
   if (KnobB.update()) {
-    MidiOut.sendCC(kChannelCC, 33, KnobB.value_); // CC#33
+    MidiOut.sendCC(kChannelC, 33, KnobB.value_); // CC#33
   }
   if (KnobC.update()) {
-    MidiOut.sendCC(kChannelCC, 34, KnobC.value_); // CC#34
+    MidiOut.sendCC(kChannelC, 34, KnobC.value_); // CC#34
   }
   // BPM Slider.
   if (BpmSlider.update()) {
