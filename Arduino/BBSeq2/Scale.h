@@ -12,7 +12,7 @@ public:
       96, 98, 100, 103, 105,
       108, 110
     };
-    return pitchArray[index];
+    return pitchArray[index & 31];
   };
   // Pick a pitch on the current scale.
   int pickPitch(int index) {
