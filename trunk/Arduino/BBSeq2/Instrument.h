@@ -9,12 +9,16 @@ public:
   : channel_(channel),
     lastNoteNum_(0) {}
   
-  void sendNote(int pitchIndex) {
-    endNote();
+  void sendNote(int pitchIndex, boolean tieMode = false) {
     if (pitchIndex > 0) {
-      lastNoteNum_ = Scale.pickPitch(pitchIndex - 1);
-      MidiOut.sendNoteOn(channel_, lastNoteNum_, kVelocity);
+      int noteNum = Scale.pickPitch(pitchIndex - 1);
+      if (!tieMode || noteNum != lastNoteNum_) {
+        endNote();
+        MidiOut.sendNoteOn(channel_, noteNum, kVelocity);
+        lastNoteNum_ = noteNum;
+      }
     } else {
+      endNote();
       lastNoteNum_ = -1;
     }
   }
