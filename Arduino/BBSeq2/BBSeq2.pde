@@ -16,7 +16,7 @@ const int kBpmMax = 180;
 // MIDI settings
 const int kChanInstA = 0;   // For instrument A.
 const int kChanInstB = 1;   // For instrument B.
-const int kChanInstC = 2;   // For instrument C.
+const int kChanInstC = 2;   // For instrument C (keyboard).
 const int kChanCC = 3;      // For CC messaging.
 
 class ClockClass {
@@ -79,6 +79,17 @@ class SliderInputClass : public AnalogInputClass<SliderInputClass> {
   }
 };
 
+// Used to read a pitch value when keyboard input is enabled.
+int readKeyboard() {
+  digitalWrite(13, LOW);
+  digitalWrite(12, LOW);
+  digitalWrite(11, LOW);
+  digitalWrite(10, LOW);
+  delayMicroseconds(50);
+  analogRead(5); // Dummy read
+  return (analogRead(5) * kNumPitch + 512) >> 10;
+}
+
 InstrumentClass InstA(kChanInstA);
 InstrumentClass InstB(kChanInstB);
 InstrumentClass InstC(kChanInstC);
@@ -104,12 +115,9 @@ int getSwitchValue() {
 
 void setup() {
   MidiOut.initialize();
-  MidiOut.sendAllNoteOff(kChanInstA);
-  MidiOut.sendAllNoteOff(kChanInstB);
-  MidiOut.sendAllNoteOff(kChanInstC);
-  MidiOut.sendAllSoundOff(kChanInstA);
-  MidiOut.sendAllSoundOff(kChanInstB);
-  MidiOut.sendAllSoundOff(kChanInstC);
+  MidiOut.sendReset(kChanInstA);
+  MidiOut.sendReset(kChanInstB);
+  MidiOut.sendReset(kChanInstC);
   seqMode = getSwitchValue();
   Timer1.initialize(Clock.calcPeriodBpm(BpmSlider.value_));
   // Say hello!!
@@ -132,6 +140,7 @@ void loop() {
       // Switch the sequence mode (when it changes).
       int input = getSwitchValue();
       if (seqMode != input) {
+        seqMode = input;
         // Reset B & C.
         SeqB.reset();
         InstB.endNote();
@@ -146,7 +155,6 @@ void loop() {
           SeqA.length_ = 16;
           SeqB.length_ = 12;
         }
-        seqMode = input;
       }
     }
     // Process the next note.
@@ -156,6 +164,8 @@ void loop() {
     } else {
       InstA.sendNote(SeqA.fetchNote() + SeqB.fetchNote());
     }
+    // Keyboard input.
+    if (SeqB.length_ < 16) InstC.sendNote(readKeyboard(), true);
     Clock.noteReady_ = false;
   }
   // Master control.

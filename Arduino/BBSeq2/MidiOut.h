@@ -36,11 +36,11 @@ public:
   void sendCC(int channel, int num, int value) {
     sendChannelMessage(channel, 0xb, num, value);
   }
-  void sendAllSoundOff(int channel) {
-    sendChannelMessage(channel, 0xb, 0x78, 0);
-  }
-  void sendAllNoteOff(int channel) {
+  void sendReset(int channel) {
     sendChannelMessage(channel, 0xb, 0x7b, 0);
+    sendChannelMessage(channel, 0xb, 0x79, 0);
+    sendChannelMessage(channel, 0xb, 0x78, 0);
+    sendChannelMessage(channel, 0xe, 0, 0x40);
   }
   void sendClock() {
 #if not(MIDI_OUT_DEBUG)
