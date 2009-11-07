@@ -6,29 +6,47 @@ const int kChanCC = 0;   // For CC messaging.
 
 class AnalogInput {
 public:
+  static const int kWindowSize = 4;
+  
   int select_;
   int minInput_;
   int maxInput_;
+
   int value_;
+  int accum_;
+  int sampleCount_;
   
   void init(int select, int minInput, int maxInput) {
     select_ = select;
     minInput_ = minInput;
     maxInput_ = maxInput;
     value_ = 0;
+    accum_ = 0;
+    sampleCount_ = 0;
   }
   
-  boolean update() {
+  void getSample() {
     digitalWrite(7, (select_ & 1) ? HIGH : LOW);
     digitalWrite(8, (select_ & 2) ? HIGH : LOW);
     digitalWrite(9, (select_ & 4) ? HIGH : LOW);
     delayMicroseconds(100);
-    int value = max(analogRead(3) - minInput_, 0);
-    value = value > 0 ? value : 0;
-    value = min(128L * value / (maxInput_ - minInput_), 127);
-    value = (value + value_) >> 1;
-    boolean modFlag = (value != value_);
-    value_ = value;
+    accum_ += analogRead(3);
+    sampleCount_++;
+  }
+  
+  boolean update() {
+    boolean modFlag = false;
+    getSample();
+    if (sampleCount_ == (1 << kWindowSize)) {
+      int value = 128L * ((accum_ >> kWindowSize) - minInput_) / (maxInput_ - minInput_);
+      value = value > 127 ? 127 : (value < 0 ? 0 : value);
+      if (value != value_) {
+        modFlag = true;
+        value_ = value;
+      }
+      accum_ = 0;
+      sampleCount_ = 0;
+    }
     return modFlag;
   }
 };
