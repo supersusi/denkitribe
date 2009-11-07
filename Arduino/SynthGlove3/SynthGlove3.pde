@@ -26,11 +26,15 @@ public:
   }
   
   void getSample() {
-    digitalWrite(7, (select_ & 1) ? HIGH : LOW);
-    digitalWrite(8, (select_ & 2) ? HIGH : LOW);
-    digitalWrite(9, (select_ & 4) ? HIGH : LOW);
-    delayMicroseconds(100);
-    accum_ += analogRead(3);
+    if (select_ < 8) {
+      digitalWrite(7, (select_ & 1) ? HIGH : LOW);
+      digitalWrite(8, (select_ & 2) ? HIGH : LOW);
+      digitalWrite(9, (select_ & 4) ? HIGH : LOW);
+      delayMicroseconds(100);
+      accum_ += analogRead(3);
+    } else {
+      accum_ += analogRead(select_ - 8);
+    }
     sampleCount_++;
   }
   
@@ -51,9 +55,12 @@ public:
   }
 };
 
-AnalogInput analogs[6];
+AnalogInput analogs[8];
 
 void setup() {
+  digitalWrite(2, HIGH);
+  digitalWrite(4, HIGH);
+  
   pinMode(7, OUTPUT);
   pinMode(8, OUTPUT);
   pinMode(9, OUTPUT);
@@ -64,13 +71,17 @@ void setup() {
   analogs[3].init(3, 540, 780);
   analogs[4].init(4, 0, 1024);
   analogs[5].init(0, 0, 1024);
+  analogs[6].init(9, 540, 310);
+  analogs[7].init(8, 760, 560);
 
   MidiOut.initialize();
   MidiOut.sendReset(kChanCC);
 }
 
 void loop() {
-  for (int i = 0; i < 6; ++i) {
+  for (int i = 0; i < 8; ++i) {
+    if (i == 6 && digitalRead(2) == LOW) continue;
+    if (i == 7 && digitalRead(4) == LOW) continue;
     if (analogs[i].update()) {
       MidiOut.sendCC(kChanCC, 30 + i, analogs[i].value_);
     }

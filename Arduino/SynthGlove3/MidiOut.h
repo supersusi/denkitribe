@@ -2,7 +2,7 @@
 #define _MIDI_OUT_H_
 
 // Set one to debug in serial monitor.
-#define MIDI_OUT_DEBUG 1
+#define MIDI_OUT_DEBUG 0
 
 // Used to output midi signals.
 class MidiOutClass {
