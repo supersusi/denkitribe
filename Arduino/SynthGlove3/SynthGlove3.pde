@@ -1,90 +1,73 @@
 #include <WProgram.h>
+#include "FilteredInput.h"
 #include "MidiOut.h"
+#include "Trigger.h"
 
 // MIDI settings
-const int kChanCC = 0;   // For CC messaging.
+const int kChanCC = 0;        // For CC messaging.
+const int kChanTrigger = 1;   // For Trigger messaging.
 
-class AnalogInput {
-public:
-  static const int kWindowSize = 4;
-  
-  int select_;
-  int minInput_;
-  int maxInput_;
-
-  int value_;
-  int accum_;
-  int sampleCount_;
-  
-  void init(int select, int minInput, int maxInput) {
-    select_ = select;
-    minInput_ = minInput;
-    maxInput_ = maxInput;
-    value_ = 0;
-    accum_ = 0;
-    sampleCount_ = 0;
-  }
-  
-  void getSample() {
-    if (select_ < 8) {
-      digitalWrite(7, (select_ & 1) ? HIGH : LOW);
-      digitalWrite(8, (select_ & 2) ? HIGH : LOW);
-      digitalWrite(9, (select_ & 4) ? HIGH : LOW);
-      delayMicroseconds(100);
-      accum_ += analogRead(3);
-    } else {
-      accum_ += analogRead(select_ - 8);
-    }
-    sampleCount_++;
-  }
-  
-  boolean update() {
-    boolean modFlag = false;
-    getSample();
-    if (sampleCount_ == (1 << kWindowSize)) {
-      int value = 128L * ((accum_ >> kWindowSize) - minInput_) / (maxInput_ - minInput_);
-      value = value > 127 ? 127 : (value < 0 ? 0 : value);
-      if (value != value_) {
-        modFlag = true;
-        value_ = value;
-      }
-      accum_ = 0;
-      sampleCount_ = 0;
-    }
-    return modFlag;
-  }
-};
-
-AnalogInput analogs[8];
+FilteredInputClass Knobs[8];
+TriggerClass Triggers[4];
+boolean pitchBendFlag;
 
 void setup() {
-  digitalWrite(2, HIGH);
-  digitalWrite(4, HIGH);
-  
   pinMode(7, OUTPUT);
   pinMode(8, OUTPUT);
   pinMode(9, OUTPUT);
   
-  analogs[0].init(7, 535, 600);
-  analogs[1].init(1, 500, 770);
-  analogs[2].init(5, 520, 770);
-  analogs[3].init(3, 540, 780);
-  analogs[4].init(4, 0, 1024);
-  analogs[5].init(0, 0, 1024);
-  analogs[6].init(9, 540, 310);
-  analogs[7].init(8, 760, 560);
+  digitalWrite(2, HIGH);
+  digitalWrite(4, HIGH);
+  digitalWrite(10, HIGH);
+  digitalWrite(11, HIGH);
+  
+  Knobs[0].init(7, 535, 600);
+  Knobs[1].init(1, 500, 770);
+  Knobs[2].init(5, 520, 770);
+  Knobs[3].init(3, 540, 780);
+  Knobs[4].init(4, 0, 1024);
+  Knobs[5].init(0, 0, 1024);
+  Knobs[6].init(9, 540, 310);
+  Knobs[7].init(8, 760, 560);
+  
+  Triggers[0].init(&Knobs[0], &Knobs[6], &Knobs[7], kChanTrigger, 40);
+  Triggers[1].init(&Knobs[1], &Knobs[6], &Knobs[7], kChanTrigger, 44);
+  Triggers[2].init(&Knobs[2], &Knobs[6], &Knobs[7], kChanTrigger, 47);
+  Triggers[3].init(&Knobs[3], &Knobs[6], &Knobs[7], kChanTrigger, 51);
+  
+  pitchBendFlag = false;
 
   MidiOut.initialize();
   MidiOut.sendReset(kChanCC);
+  MidiOut.sendReset(kChanTrigger);
 }
 
 void loop() {
   for (int i = 0; i < 8; ++i) {
     if (i == 6 && digitalRead(2) == LOW) continue;
     if (i == 7 && digitalRead(4) == LOW) continue;
-    if (analogs[i].update()) {
-      MidiOut.sendCC(kChanCC, 30 + i, analogs[i].value_);
+    Knobs[i].update();
+    if (Knobs[i].isModified()) {
+      MidiOut.sendCC(kChanCC, 30 + i, Knobs[i].getValue());
     }
+  }
+  
+  if (!digitalRead(11)) {
+    if (!pitchBendFlag || Knobs[6].isModified()) {
+      MidiOut.sendPitchBend(kChanTrigger, 0x40 + (Knobs[6].getValue() >> 1));
+    }
+    pitchBendFlag = true;
+  } else {
+    if (pitchBendFlag) {
+      MidiOut.sendPitchBend(kChanTrigger, 0x40);
+      pitchBendFlag = false;
+    }
+  }
+  
+  boolean triggerPitchFlag = !digitalRead(10);
+  for (int i = 0; i < 4; ++i) {
+    Triggers[i].setDynamicPitchFlag(triggerPitchFlag);
+    Triggers[i].update();
   }
 }
 
