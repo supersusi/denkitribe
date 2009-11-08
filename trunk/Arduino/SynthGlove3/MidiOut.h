@@ -1,5 +1,5 @@
-#ifndef _MIDI_OUT_H_
-#define _MIDI_OUT_H_
+#ifndef MIDI_OUT_H
+#define MIDI_OUT_H
 
 // Set one to debug in serial monitor.
 #define MIDI_OUT_DEBUG 0
@@ -36,6 +36,9 @@ public:
   void sendNoteOff(int channel, int pitch, int velocity) {
     sendChannelMessage(channel, 0x8, pitch, velocity);
   }
+  void sendPitchBend(int channel, int value) {
+    sendChannelMessage(channel, 0xe, 0, value);
+  }
   void sendCC(int channel, int num, int value) {
     sendChannelMessage(channel, 0xb, num, value);
   }
@@ -69,5 +72,5 @@ public:
 // Global instance.
 MidiOutClass MidiOut;
 
-#endif // _MIDI_OUT_H_
+#endif // MIDI_OUT_H
 
