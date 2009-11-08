@@ -1,11 +1,12 @@
 #ifndef TRIGGER_H
 #define TRIGGER_H
 
-class TriggerClass {
+template <class InputClass>
+class TriggerTemplate {
 public:
-  void init(const FilteredInputClass* pInTrigger,
-            const FilteredInputClass* pInPitch,
-            const FilteredInputClass* pInVelocity,
+  void init(const InputClass* pInTrigger,
+            const InputClass* pInPitch,
+            const InputClass* pInVelocity,
             int outChannel,
             int basePitch) {
     pInTrigger_ = pInTrigger;
@@ -17,8 +18,8 @@ public:
   }
   
   void reset() {
-    currentNote_ = 0;
     flagDynamicPitch_ = false;
+    currentNote_ = 0;
   }
   
   void setDynamicPitchFlag(boolean flag) {
@@ -42,14 +43,15 @@ public:
   }
 
 private:
-  const FilteredInputClass* pInTrigger_;
-  const FilteredInputClass* pInPitch_;
-  const FilteredInputClass* pInVelocity_;
+  const InputClass* pInTrigger_;
+  const InputClass* pInPitch_;
+  const InputClass* pInVelocity_;
+  
   int outChannel_;
   int basePitch_;
 
-  int currentNote_;
   boolean flagDynamicPitch_;
+  int currentNote_;
 };
 
 #endif // TRIGGER_H
