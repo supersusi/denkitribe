@@ -1,8 +1,18 @@
 #ifndef FILTERED_INPUT_H
 #define FILTERED_INPUT_H
 
-class FilteredInputClass {
+template <int kMuxPinS1,
+          int kMuxPinS2,
+          int kMuxPinS3,
+          int kMuxPinCom>
+class FilteredInputTemplate {
 public:
+  static void setup() {
+    pinMode(kMuxPinS1, OUTPUT);
+    pinMode(kMuxPinS2, OUTPUT);
+    pinMode(kMuxPinS3, OUTPUT);
+  }
+
   void init(int select, int minInput, int maxInput) {
     select_ = select;
     minInput_ = minInput;
@@ -55,11 +65,11 @@ private:
 
   void doSample() {
     if (select_ < 8) {
-      digitalWrite(7, (select_ & 1) ? HIGH : LOW);
-      digitalWrite(8, (select_ & 2) ? HIGH : LOW);
-      digitalWrite(9, (select_ & 4) ? HIGH : LOW);
+      digitalWrite(kMuxPinS1, (select_ & 1) ? HIGH : LOW);
+      digitalWrite(kMuxPinS2, (select_ & 2) ? HIGH : LOW);
+      digitalWrite(kMuxPinS3, (select_ & 4) ? HIGH : LOW);
       delayMicroseconds(100);
-      accum_ += analogRead(3);
+      accum_ += analogRead(kMuxPinCom);
     } else {
       accum_ += analogRead(select_ - 8);
     }
