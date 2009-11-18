@@ -51,7 +51,7 @@ public:
 #if MIDI_OUT_DEBUG
     Serial.println("Start");
 #else
-    Serial.write(0xfa);
+    Serial.write(0xfb);
 #endif
   }
   void sendStop() {

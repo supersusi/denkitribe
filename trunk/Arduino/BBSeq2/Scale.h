@@ -14,9 +14,33 @@ public:
     };
     return pitchArray[index & 31];
   };
+  // Minor pentatonic scale.
+  int pickPitchMinorPentatonic(int index) {
+    static int pitchArray[32] = {
+      36, 39, 41, 43, 46,
+      48, 51, 53, 55, 58,
+      60, 63, 65, 67, 70,
+      72, 75, 77, 79, 82,
+      84, 87, 89, 91, 94,
+      96, 99, 101, 103, 106,
+      108, 111
+    };
+    return pitchArray[index & 31];
+  };
+  // Natural minor scale.
+  int pickPitchMinor(int index) {
+    static int pitchArray[32] = {
+      36, 38, 39, 41, 43, 44, 46,
+      48, 50, 51, 53, 55, 56, 58,
+      60, 62, 63, 65, 67, 68, 70,
+      72, 74, 75, 77, 79, 80, 80,
+      84, 86, 87, 89
+    };
+    return pitchArray[index & 31];
+  };
   // Pick a pitch on the current scale.
   int pickPitch(int index) {
-    return pickPitchPentatonic(index);
+    return pickPitchMinor(index);
   }
 };
 
