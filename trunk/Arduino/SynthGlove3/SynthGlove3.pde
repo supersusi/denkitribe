@@ -20,10 +20,10 @@ const int kChannelCC = 0;
 const int kChannelTrigger = 1;
 const int kFirstCC = 30;
 
-const int kNote1 = 40;  // O4 C
-const int kNote2 = 44;  // O4 E
-const int kNote3 = 47;  // O4 G
-const int kNote4 = 51;  // O4 B
+const int kNote1 = 48;  // O4 C
+const int kNote2 = 52;  // O4 E
+const int kNote3 = 55;  // O4 G
+const int kNote4 = 59;  // O4 B
 
 typedef FilteredInputTemplate
   <kPinMuxS1, kPinMuxS2, kPinMuxS3, kPinMuxCom> FilteredInput;
@@ -34,6 +34,8 @@ Trigger triggers[4];
 boolean pitchBendFlag;
 
 void setup() {
+  pinMode(13, OUTPUT);
+
   FilteredInput::setup();
   
   digitalWrite(kPinSwitchA1, HIGH);
@@ -94,5 +96,8 @@ void loop() {
     triggers[i].setDynamicPitchFlag(triggerPitchFlag);
     triggers[i].update();
   }
+  
+  static int blinker;
+  digitalWrite(13, ((blinker++ & 0xff) < 0x80) ? HIGH : LOW);
 }
 
