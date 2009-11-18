@@ -40,7 +40,8 @@ public:
       digitalWrite(muxPort3_, (select & 8) ? HIGH : LOW);
       delayMicroseconds(50);
       analogRead(inputPort_); // Dummy read
-      pitchIndex = (analogRead(inputPort_) * numPitch_ + 512) >> 10;
+      pitchIndex = (analogRead(inputPort_) * numPitch_) >> 10;
+      pitchIndex = max(pitchIndex - 1, 0);
     }
     if (++stepPos_ >= length_) stepPos_ = 0;
     return pitchIndex;

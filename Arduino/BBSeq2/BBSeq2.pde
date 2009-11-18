@@ -11,7 +11,7 @@ const int kNumPitch = 22;
 
 // BPM settings.
 const int kBpmMin = 80;
-const int kBpmMax = 180;
+const int kBpmMax = 130;
 
 // MIDI settings
 const int kChanInstA = 0;   // For instrument A.
@@ -30,19 +30,19 @@ public:
   }
 
   ClockClass() {
-    reset();
+    reset(false);
   }
   
-  void reset() {
+  void reset(boolean start) {
     tickCount_ = -1;
     clockReady_ = false;
-    noteReady_ = false;
+    noteReady_ = start;
   }
   
   void tick() {
     // Ignore the first tick.
     if (tickCount_ == -1) {
-      tickCount_ = 0;
+      tickCount_ = 2;
     } else {
       clockReady_ = true;
       // Process a note per six ticks.
@@ -87,7 +87,8 @@ int readKeyboard() {
   digitalWrite(10, LOW);
   delayMicroseconds(50);
   analogRead(5); // Dummy read
-  return (analogRead(5) * kNumPitch + 512) >> 10;
+  int pitch = (analogRead(5) * kNumPitch) >> 10;
+  return max(pitch - 1, 0);
 }
 
 InstrumentClass InstA(kChanInstA);
@@ -129,10 +130,28 @@ void setup() {
 }
 
 void loop() {
-  // Timing clock.
-  if (Clock.clockReady_) {
-    MidiOut.sendClock();
-    Clock.clockReady_ = false;
+  // Master control.
+  if (Master.update() && Master.state_) {
+    static boolean running = false;
+    running = !running;
+    if (running) {
+      // Start the sequencer.
+      MidiOut.sendStart();
+      // Start the clock.
+      Clock.reset(true);
+      Timer1.attachInterrupt(TimerTick);
+    } else {
+      // Stop the clock.
+      Timer1.detachInterrupt();
+      Clock.reset(false);
+      // Reset the status.
+      MidiOut.sendStop();
+      InstA.endNote();
+      InstB.endNote();
+      InstC.endNote();
+      SeqA.reset();
+      SeqB.reset();
+    }
   }
   // Drive the sequencers.
   if (Clock.noteReady_) {
@@ -168,27 +187,10 @@ void loop() {
     if (SeqB.length_ < 16) InstC.sendNote(readKeyboard(), true);
     Clock.noteReady_ = false;
   }
-  // Master control.
-  if (Master.update() && Master.state_) {
-    static boolean running = false;
-    running = !running;
-    if (running) {
-      // Start the sequencer.
-      MidiOut.sendStart();
-      // Start the clock.
-      Timer1.attachInterrupt(TimerTick);
-    } else {
-      // Stop the clock.
-      Timer1.detachInterrupt();
-      Clock.reset();
-      // Reset the status.
-      MidiOut.sendStop();
-      InstA.endNote();
-      InstB.endNote();
-      InstC.endNote();
-      SeqA.reset();
-      SeqB.reset();
-    }
+  // Timing clock.
+  if (Clock.clockReady_) {
+    MidiOut.sendClock();
+    Clock.clockReady_ = false;
   }
   // Switches.
   SwitchA.update();
