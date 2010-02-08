@@ -1,5 +1,15 @@
 World world;
+Body paddle;
 Set collisionSet;
+
+class PaddleInfo {
+  public float m_width;
+  public float m_height;
+  public PaddleInfo() {
+    m_width = 1.0f;
+    m_height = 0.1f;
+  }
+}
 
 class BoxInfo {
   public float m_width;
@@ -15,7 +25,7 @@ class BombInfo {
   public BombInfo(float radius) {
     m_radius = radius;
   }
-};
+}
 
 class MyContactListener implements ContactListener {
   public void add(ContactPoint point) {
@@ -107,6 +117,49 @@ void setup() {
     sd.setAsBox(1.0f, 20.0f, new Vec2(6, 0), 0);
     ground.createShape(sd);
   }
+  
+  // Paddle
+  {
+    PaddleInfo info = new PaddleInfo();
+    
+    BodyDef bd = new BodyDef();
+    bd.position.set(0, 5);
+    bd.userData = info;
+
+    PolygonDef sd = new PolygonDef();
+    sd.setAsBox(info.m_width, info.m_height);
+    sd.density = 30.0f;
+    sd.friction = 0.1f;
+    
+    Body body = world.createBody(bd);
+    body.createShape(sd);
+    body.setMassFromShapes();
+    
+    paddle = body;
+  }
+}
+
+boolean keyThrustLeft;
+boolean keyThrustRight;
+
+void keyPressed() {
+  if (key == CODED) {
+    if (keyCode == LEFT) {
+      keyThrustLeft = true;
+    } else if (keyCode == RIGHT) {
+      keyThrustRight = true;
+    }
+  }
+}
+
+void keyReleased() {
+  if (key == CODED) {
+    if (keyCode == LEFT) {
+      keyThrustLeft = false;
+    } else if (keyCode == RIGHT) {
+      keyThrustRight = false;
+    }
+  }
 }
 
 void draw() {
@@ -116,6 +169,15 @@ void draw() {
   background(255);
   translate(width / 2, height);
   scale(width / 10, height / -10);
+  
+  if (keyThrustLeft) {
+    Vec2 pos = paddle.getPosition();
+    paddle.applyForce(new Vec2(60, 60), pos);
+  }
+  if (keyThrustRight) {
+    Vec2 pos = paddle.getPosition();
+    paddle.applyForce(new Vec2(-60, 60), pos);
+  }
   
   float dice = random(30);
   if (dice < 1) {
@@ -137,6 +199,15 @@ void draw() {
     if (ud == null) continue;
 
     pushMatrix();
+    
+    if (ud instanceof PaddleInfo) {
+      PaddleInfo info = (PaddleInfo)ud;
+      Vec2 pos = body.getPosition();
+      translate(pos.x, pos.y);
+      rotate(body.getAngle());
+      rect(-info.m_width, -info.m_height, 
+           info.m_width * 2, info.m_height * 2);
+    }
     
     if (ud instanceof BoxInfo) {
       BoxInfo info = (BoxInfo)ud;
