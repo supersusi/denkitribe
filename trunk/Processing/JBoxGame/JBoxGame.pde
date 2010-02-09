@@ -1,88 +1,193 @@
+// Key inputs
+boolean keyInLeft;
+boolean keyInRight;
+boolean keyInUp;
+void keyPressed() {
+  if (key == CODED) {
+    if (keyCode == UP) {
+      keyInUp = true;
+    } else if (keyCode == LEFT) {
+      keyInLeft = true;
+    } else if (keyCode == RIGHT) {
+      keyInRight = true;
+    }
+  }
+}
+void keyReleased() {
+  if (key == CODED) {
+    if (keyCode == UP) {
+      keyInUp = false;
+    } else if (keyCode == LEFT) {
+      keyInLeft = false;
+    } else if (keyCode == RIGHT) {
+      keyInRight = false;
+    }
+  }
+}
+
+// Interfaces
+interface Updatable {
+  abstract void update(Body body);
+}
+interface Drawable {
+  abstract void draw(Body body);
+}
+
+// Player
+class PlayerData implements Updatable, Drawable {
+  public float radius;
+  public boolean touchGround;
+  public PlayerData() {
+    radius = 0.3f;
+  }
+  public void update(Body body) {
+    body.applyForce(new Vec2(0, -10), body.getPosition());
+  
+    PlayerData data = (PlayerData)body.getUserData();
+    if (!data.touchGround) return;
+    
+    float vx = 0;
+    
+    if (keyInUp) {
+      body.applyForce(new Vec2(0, 80), body.getPosition());
+    }
+    if (keyInLeft) {
+      vx = -5.0f;
+    } else if (keyInRight) {
+      vx = 5.0f;
+    }
+  
+    Vec2 vel = body.getLinearVelocity();
+    if (vel.x < vx - 0.8f) {
+      body.applyForce(new Vec2(20, 0), body.getPosition());
+    } else if (vel.x > vx + 0.8f) {
+      body.applyForce(new Vec2(-20, 0), body.getPosition());
+    }
+    
+    data.touchGround = false;
+  }
+  public void draw(Body body) {
+    PlayerData data = (PlayerData)body.getUserData();
+    Vec2 pos = body.getPosition();
+    translate(pos.x, pos.y);
+    ellipse(0, 0, data.radius * 2, data.radius * 2);
+  }
+}
+Body spawnPlayer(World world) {
+  PlayerData data = new PlayerData();
+
+  CircleDef sd = new CircleDef();
+  sd.radius = data.radius;
+  sd.density = 3.3f;
+
+  BodyDef bd = new BodyDef();
+  bd.position.set(0, 1);
+  bd.linearDamping = 0.8f;
+  bd.userData = data;
+
+  Body body = world.createBody(bd);
+  body.createShape(sd);
+  body.setMassFromShapes();
+  return body;
+}
+
+// Barrier
+class BarrierData implements Drawable {
+  public float width;
+  public float height;
+  public BarrierData() {
+    width = random(0.3f, 0.6f);
+    height = random(0.1f, 0.5f);
+  }
+  public void draw(Body body) {
+    BarrierData data = (BarrierData)body.getUserData();
+    Vec2 pos = body.getPosition();
+    translate(pos.x, pos.y);
+    rotate(body.getAngle());
+    rect(-data.width, -data.height, data.width * 2, data.height * 2);
+  }
+}
+Body spawnBarrier(World world) {
+  BarrierData data = new BarrierData();
+
+  PolygonDef sd = new PolygonDef();
+  sd.setAsBox(data.width, data.height);
+  sd.density = 1.0f;
+  sd.friction = 0.3f;
+
+  BodyDef bd = new BodyDef();
+  bd.position.set(random(-4, 4), 10);
+  bd.userData = data;
+
+  Body body = world.createBody(bd);
+  body.createShape(sd);
+  body.setMassFromShapes();
+  return body;
+}
+
+// Bomb
+class BombData implements Drawable {
+  public float radius;
+  public BombData() {
+    radius = 0.3f;
+  }
+  public void draw(Body body) {
+    BombData data = (BombData)body.getUserData();
+    Vec2 pos = body.getPosition();
+    translate(pos.x, pos.y);
+    ellipse(0, 0, data.radius * 2, data.radius * 2);
+  }
+}
+Body spawnBomb(World world) {
+  BombData data = new BombData();
+
+  CircleDef sd = new CircleDef();
+  sd.radius = data.radius;
+  sd.density = 1.0f;
+  sd.restitution = 0.3f;
+
+  BodyDef bd = new BodyDef();
+  bd.position.set(random(-4, 4), 10);
+  bd.userData = data;
+
+  Body body = world.createBody(bd);
+  body.createShape(sd);
+  body.setMassFromShapes();
+  return body;
+}
+
 World world;
-Body anchor;
-Body paddle;
-Set collisionSet;
+Body player;
 
-class PaddleInfo {
-  public float m_width;
-  public float m_height;
-  public PaddleInfo() {
-    m_width = 1.0f;
-    m_height = 0.1f;
-  }
-}
-
-class BoxInfo {
-  public float m_width;
-  public float m_height;
-  public BoxInfo(float width, float height) {
-    m_width = width;
-    m_height = height;
-  }
-}
-
-class BombInfo {
-  public float m_radius;
-  public BombInfo(float radius) {
-    m_radius = radius;
-  }
-}
-
-class MyContactListener implements ContactListener {
+class GlobalContactListener implements ContactListener {
   public void add(ContactPoint point) {
-    Body body1 = point.shape1.getBody();
-    Body body2 = point.shape2.getBody();
-    Object ud1 = body1.getUserData();
-    Object ud2 = body2.getUserData();
-    if (ud1 instanceof BombInfo && ud2 instanceof BoxInfo) {
-      collisionSet.add(body1);
-      collisionSet.add(body2);
-      return;
-    }
-    if (ud2 instanceof BombInfo && ud1 instanceof BoxInfo) {
-      collisionSet.add(body1);
-      collisionSet.add(body2);
-      return;
-    }
   }
   public void persist(ContactPoint point) {
+    Object ud1 = point.shape1.getBody().getUserData();
+    Object ud2 = point.shape2.getBody().getUserData();
+    if (ud1 instanceof PlayerData) {
+      if (ud2 instanceof BombData) {
+        point.shape2.getBody().applyForce(new Vec2(0, 50), point.shape2.getBody().getPosition());
+      }
+    }
+    if (ud2 instanceof PlayerData) {
+      if (ud1 instanceof BombData) {
+        point.shape1.getBody().applyForce(new Vec2(0, 50), point.shape1.getBody().getPosition());
+      }
+    }
   }
   public void remove(ContactPoint point) {
   }
   public void result(ContactResult point) {
+    Object ud1 = point.shape1.getBody().getUserData();
+    Object ud2 = point.shape2.getBody().getUserData();
+    float thresh = 0.6f;
+    if (ud1 instanceof PlayerData) {
+      ((PlayerData)ud1).touchGround |= (point.normal.y < thresh);
+    } else if (ud2 instanceof PlayerData) {
+      ((PlayerData)ud2).touchGround |= (point.normal.y > thresh);
+    }
   }
-}
-
-void spawnBox() {
-  float w = random(0.1f, 0.5f);
-  float h = random(0.1f, 0.5f);
-  
-  PolygonDef sd = new PolygonDef();
-  sd.setAsBox(w, h);
-  sd.density = 1.0f;
-  sd.friction = 0.3f;
-  
-  BodyDef bd = new BodyDef();
-  bd.position.set(random(-4, 4), 10);
-  bd.userData = new BoxInfo(w, h);
-  
-  Body body = world.createBody(bd);
-  body.createShape(sd);
-  body.setMassFromShapes();
-}
-
-void spawnBomb() {
-  CircleDef sd = new CircleDef();
-  sd.radius = 0.3f;
-  sd.density = 1.0f;
-
-  BodyDef bd = new BodyDef();
-  bd.position.set(random(-4, 4), 10);
-  bd.userData = new BombInfo(sd.radius);
-  
-  Body body = world.createBody(bd);
-  body.createShape(sd);
-  body.setMassFromShapes();
 }
 
 void setup() {
@@ -96,7 +201,7 @@ void setup() {
     worldAABB.upperBound.set(+20.0f, +20.0f);
     Vec2 gravity = new Vec2(0.0f, -2.8f);
     world = new World(worldAABB, gravity, true);
-    world.setContactListener(new MyContactListener());
+    world.setContactListener(new GlobalContactListener());
   }
 
   // World border
@@ -119,83 +224,7 @@ void setup() {
     ground.createShape(sd);
   }
   
-  // Anchor
-  {
-    BodyDef bd = new BodyDef();
-    bd.position.set(0, 5);
-    
-    PolygonDef sd = new PolygonDef();
-    sd.setAsBox(0.1f, 0.1f);
-    sd.density = 30.0f;
-    sd.friction = 0.1f;
-    
-    anchor = world.createBody(bd);
-    anchor.createShape(sd);
-    anchor.setMassFromShapes();
-  }
-  
-  // Paddle
-  {
-    PaddleInfo info = new PaddleInfo();
-    
-    BodyDef bd = new BodyDef();
-    bd.position.set(0, 4);
-    bd.linearDamping = 0.8f;
-    bd.userData = info;
-
-    PolygonDef sd = new PolygonDef();
-    sd.setAsBox(info.m_width, info.m_height);
-    sd.density = 2.0f;
-    sd.friction = 0.1f;
-    
-    Body body = world.createBody(bd);
-    body.createShape(sd);
-    body.setMassFromShapes();
-    
-    paddle = body;
-  }
-  
-  {
-    DistanceJointDef jd = new DistanceJointDef();
-    Vec2 pos = paddle.getPosition();
-    pos.x += 0.5f;
-    jd.initialize(anchor, paddle,
-                  anchor.getPosition(), pos);
-    jd.collideConnected = false;
-    world.createJoint(jd);
-  }
-  {
-    DistanceJointDef jd = new DistanceJointDef();
-    Vec2 pos = paddle.getPosition();
-    pos.x -= 0.5f;
-    jd.initialize(anchor, paddle,
-                  anchor.getPosition(), pos);
-    jd.collideConnected = false;
-    world.createJoint(jd);
-  }
-}
-
-boolean keyThrustLeft;
-boolean keyThrustRight;
-
-void keyPressed() {
-  if (key == CODED) {
-    if (keyCode == LEFT) {
-      keyThrustLeft = true;
-    } else if (keyCode == RIGHT) {
-      keyThrustRight = true;
-    }
-  }
-}
-
-void keyReleased() {
-  if (key == CODED) {
-    if (keyCode == LEFT) {
-      keyThrustLeft = false;
-    } else if (keyCode == RIGHT) {
-      keyThrustRight = false;
-    }
-  }
+  player = spawnPlayer(world);
 }
 
 void draw() {
@@ -206,65 +235,27 @@ void draw() {
   translate(width / 2, height);
   scale(width / 10, height / -10);
   
-  if (keyThrustLeft) {
-    Vec2 pos = paddle.getPosition();
-    anchor.applyForce(new Vec2(-10, 10), pos);
-  }
-  if (keyThrustRight) {
-    Vec2 pos = paddle.getPosition();
-    anchor.applyForce(new Vec2(+10, 10), pos);
-  }
-  
-  float dice = random(30);
+  float dice = random(80);
   if (dice < 1) {
-    spawnBox();
+    spawnBarrier(world);
   } else if (dice < 2) {
-    spawnBomb();
+    spawnBomb(world);
   }
-  
-  collisionSet = new HashSet();
-  world.step(1.0f / frameRate, 4);
-  
-  for (Iterator it = collisionSet.iterator(); it.hasNext();) {
-    world.destroyBody((Body)it.next());
-  }
-  collisionSet = null;
-  
-  rect(anchor.getPosition().x - 0.1f, anchor.getPosition().y - 0.1f,
-       0.2f, 0.2f);
-  
+
   for (Body body = world.getBodyList(); body != null; body = body.getNext()) {
     Object ud = body.getUserData();
-    if (ud == null) continue;
+    if (ud instanceof Updatable) ((Updatable)ud).update(body);
+  }
 
-    pushMatrix();
-    
-    if (ud instanceof PaddleInfo) {
-      PaddleInfo info = (PaddleInfo)ud;
-      Vec2 pos = body.getPosition();
-      translate(pos.x, pos.y);
-      rotate(body.getAngle());
-      rect(-info.m_width, -info.m_height, 
-           info.m_width * 2, info.m_height * 2);
+  world.step(1.0f / frameRate, 4);
+
+  for (Body body = world.getBodyList(); body != null; body = body.getNext()) {
+    Object ud = body.getUserData();
+    if (ud instanceof Drawable) {
+      pushMatrix();
+      ((Drawable)ud).draw(body);
+      popMatrix();
     }
-    
-    if (ud instanceof BoxInfo) {
-      BoxInfo info = (BoxInfo)ud;
-      Vec2 pos = body.getPosition();
-      translate(pos.x, pos.y);
-      rotate(body.getAngle());
-      rect(-info.m_width, -info.m_height, 
-           info.m_width * 2, info.m_height * 2);
-    }
-    
-    if (ud instanceof BombInfo) {
-      BombInfo info = (BombInfo)ud;
-      Vec2 pos = body.getPosition();
-      translate(pos.x, pos.y);
-      ellipse(0, 0, info.m_radius * 2, info.m_radius * 2);
-    }
-    
-    popMatrix();
   }
 }
 
