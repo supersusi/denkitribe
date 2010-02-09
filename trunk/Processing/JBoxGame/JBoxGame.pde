@@ -33,6 +33,9 @@ interface Drawable {
   abstract void draw(Body body);
 }
 
+// Kill list
+Set killList;
+
 // Player
 class PlayerData implements Updatable, Drawable {
   public float radius;
@@ -49,7 +52,7 @@ class PlayerData implements Updatable, Drawable {
     float vx = 0;
     
     if (keyInUp) {
-      body.applyForce(new Vec2(0, 80), body.getPosition());
+      body.applyForce(new Vec2(0, 70), body.getPosition());
     }
     if (keyInLeft) {
       vx = -5.0f;
@@ -59,9 +62,9 @@ class PlayerData implements Updatable, Drawable {
   
     Vec2 vel = body.getLinearVelocity();
     if (vel.x < vx - 0.8f) {
-      body.applyForce(new Vec2(20, 0), body.getPosition());
+      body.applyForce(new Vec2(10, 0), body.getPosition());
     } else if (vel.x > vx + 0.8f) {
-      body.applyForce(new Vec2(-20, 0), body.getPosition());
+      body.applyForce(new Vec2(-10, 0), body.getPosition());
     }
     
     data.touchGround = false;
@@ -78,7 +81,7 @@ Body spawnPlayer(World world) {
 
   CircleDef sd = new CircleDef();
   sd.radius = data.radius;
-  sd.density = 3.3f;
+  sd.density = 1.5f;
 
   BodyDef bd = new BodyDef();
   bd.position.set(0, 1);
@@ -91,24 +94,28 @@ Body spawnPlayer(World world) {
   return body;
 }
 
-// Barrier
-class BarrierData implements Drawable {
+// Block
+class BlockData implements Drawable {
   public float width;
   public float height;
-  public BarrierData() {
+  public BlockData() {
     width = random(0.3f, 0.6f);
     height = random(0.1f, 0.5f);
   }
+  public BlockData(float width_, float height_) {
+    width = width_;
+    height = height_;
+  }
   public void draw(Body body) {
-    BarrierData data = (BarrierData)body.getUserData();
+    BlockData data = (BlockData)body.getUserData();
     Vec2 pos = body.getPosition();
     translate(pos.x, pos.y);
     rotate(body.getAngle());
     rect(-data.width, -data.height, data.width * 2, data.height * 2);
   }
 }
-Body spawnBarrier(World world) {
-  BarrierData data = new BarrierData();
+Body spawnBlock(World world) {
+  BlockData data = new BlockData();
 
   PolygonDef sd = new PolygonDef();
   sd.setAsBox(data.width, data.height);
@@ -124,12 +131,82 @@ Body spawnBarrier(World world) {
   body.setMassFromShapes();
   return body;
 }
+Body spawnFixedBlock(World world, Vec2 pos) {
+  BlockData data = new BlockData(0.25f, 0.25f);
+
+  PolygonDef sd = new PolygonDef();
+  sd.setAsBox(data.width, data.height);
+  sd.density = 100.0f;
+
+  BodyDef bd = new BodyDef();
+  bd.position = pos;
+  bd.userData = data;
+
+  Body body = world.createBody(bd);
+  body.createShape(sd);
+  body.setMassFromShapes();
+  return body;
+}
+
+// Blast
+class BlastData implements Updatable, Drawable {
+  public float radius;
+  public Set collideeSet;
+  public BlastData() {
+    radius = 3.0f;
+    collideeSet = new HashSet();
+  }
+  public void update(Body body) {
+    for (Iterator i = collideeSet.iterator(); i.hasNext();) {
+      Body collidee = (Body)i.next();
+      Vec2 vec = collidee.getPosition().sub(body.getPosition());
+      float dist = vec.normalize();
+      if (dist < 2.0f && collidee.getUserData() instanceof BlockData) {
+        killList.add(collidee);
+      } else {
+        vec.mulLocal(75);
+        collidee.applyForce(vec, collidee.getPosition());
+      }
+    }
+    killList.add(body);
+  }
+  public void draw(Body body) {
+    BlastData data = (BlastData)body.getUserData();
+    Vec2 pos = body.getPosition();
+    translate(pos.x, pos.y);
+    ellipse(0, 0, data.radius * 2, data.radius * 2);
+  }
+}
+Body spawnBlast(World world, Vec2 pos) {
+  BlastData data = new BlastData();
+
+  CircleDef sd = new CircleDef();
+  sd.radius = data.radius;
+  sd.isSensor = true;
+
+  BodyDef bd = new BodyDef();
+  bd.position = pos;
+  bd.userData = data;
+
+  Body body = world.createBody(bd);
+  body.createShape(sd);
+  return body;
+}
 
 // Bomb
-class BombData implements Drawable {
+class BombData implements Updatable, Drawable {
   public float radius;
+  public float life;
   public BombData() {
     radius = 0.3f;
+    life = 3.2f;
+  }
+  public void update(Body body) {
+    life -= 1.0f / frameRate;
+    if (life <= 0) {
+      spawnBlast(body.getWorld(), body.getPosition());
+      killList.add(body);
+    }
   }
   public void draw(Body body) {
     BombData data = (BombData)body.getUserData();
@@ -161,6 +238,14 @@ Body player;
 
 class GlobalContactListener implements ContactListener {
   public void add(ContactPoint point) {
+    Object ud1 = point.shape1.getBody().getUserData();
+    Object ud2 = point.shape2.getBody().getUserData();
+    if (ud1 instanceof BlastData) {
+      ((BlastData)ud1).collideeSet.add(point.shape2.getBody());
+    }
+    if (ud2 instanceof BlastData) {
+      ((BlastData)ud2).collideeSet.add(point.shape1.getBody());
+    }
   }
   public void persist(ContactPoint point) {
     Object ud1 = point.shape1.getBody().getUserData();
@@ -181,7 +266,7 @@ class GlobalContactListener implements ContactListener {
   public void result(ContactResult point) {
     Object ud1 = point.shape1.getBody().getUserData();
     Object ud2 = point.shape2.getBody().getUserData();
-    float thresh = 0.6f;
+    float thresh = 0.8f;
     if (ud1 instanceof PlayerData) {
       ((PlayerData)ud1).touchGround |= (point.normal.y < thresh);
     } else if (ud2 instanceof PlayerData) {
@@ -224,6 +309,10 @@ void setup() {
     ground.createShape(sd);
   }
   
+  for (float x = -4.75f; x < 5.0f; x += 0.5f) {
+    spawnFixedBlock(world, new Vec2(x, 0.25f));
+  }
+  
   player = spawnPlayer(world);
 }
 
@@ -235,9 +324,11 @@ void draw() {
   translate(width / 2, height);
   scale(width / 10, height / -10);
   
+  killList = new HashSet();
+  
   float dice = random(80);
   if (dice < 1) {
-    spawnBarrier(world);
+    spawnBlock(world);
   } else if (dice < 2) {
     spawnBomb(world);
   }
@@ -256,6 +347,10 @@ void draw() {
       ((Drawable)ud).draw(body);
       popMatrix();
     }
+  }
+  
+  for (Iterator i = killList.iterator(); i.hasNext();) {
+    world.destroyBody((Body)i.next());
   }
 }
 
