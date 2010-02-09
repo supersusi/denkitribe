@@ -1,4 +1,5 @@
 World world;
+Body anchor;
 Body paddle;
 Set collisionSet;
 
@@ -118,17 +119,33 @@ void setup() {
     ground.createShape(sd);
   }
   
+  // Anchor
+  {
+    BodyDef bd = new BodyDef();
+    bd.position.set(0, 5);
+    
+    PolygonDef sd = new PolygonDef();
+    sd.setAsBox(0.1f, 0.1f);
+    sd.density = 30.0f;
+    sd.friction = 0.1f;
+    
+    anchor = world.createBody(bd);
+    anchor.createShape(sd);
+    anchor.setMassFromShapes();
+  }
+  
   // Paddle
   {
     PaddleInfo info = new PaddleInfo();
     
     BodyDef bd = new BodyDef();
-    bd.position.set(0, 5);
+    bd.position.set(0, 4);
+    bd.linearDamping = 0.8f;
     bd.userData = info;
 
     PolygonDef sd = new PolygonDef();
     sd.setAsBox(info.m_width, info.m_height);
-    sd.density = 30.0f;
+    sd.density = 2.0f;
     sd.friction = 0.1f;
     
     Body body = world.createBody(bd);
@@ -136,6 +153,25 @@ void setup() {
     body.setMassFromShapes();
     
     paddle = body;
+  }
+  
+  {
+    DistanceJointDef jd = new DistanceJointDef();
+    Vec2 pos = paddle.getPosition();
+    pos.x += 0.5f;
+    jd.initialize(anchor, paddle,
+                  anchor.getPosition(), pos);
+    jd.collideConnected = false;
+    world.createJoint(jd);
+  }
+  {
+    DistanceJointDef jd = new DistanceJointDef();
+    Vec2 pos = paddle.getPosition();
+    pos.x -= 0.5f;
+    jd.initialize(anchor, paddle,
+                  anchor.getPosition(), pos);
+    jd.collideConnected = false;
+    world.createJoint(jd);
   }
 }
 
@@ -172,11 +208,11 @@ void draw() {
   
   if (keyThrustLeft) {
     Vec2 pos = paddle.getPosition();
-    paddle.applyForce(new Vec2(60, 60), pos);
+    anchor.applyForce(new Vec2(-10, 10), pos);
   }
   if (keyThrustRight) {
     Vec2 pos = paddle.getPosition();
-    paddle.applyForce(new Vec2(-60, 60), pos);
+    anchor.applyForce(new Vec2(+10, 10), pos);
   }
   
   float dice = random(30);
@@ -193,6 +229,9 @@ void draw() {
     world.destroyBody((Body)it.next());
   }
   collisionSet = null;
+  
+  rect(anchor.getPosition().x - 0.1f, anchor.getPosition().y - 0.1f,
+       0.2f, 0.2f);
   
   for (Body body = world.getBodyList(); body != null; body = body.getNext()) {
     Object ud = body.getUserData();
