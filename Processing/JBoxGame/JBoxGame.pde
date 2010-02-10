@@ -1,7 +1,10 @@
-// Key inputs
+// Processing + JBox2D ゲーム作例
+
+// キー入力
 boolean keyInLeft;
 boolean keyInRight;
 boolean keyInUp;
+// キー押下コールバック
 void keyPressed() {
   if (key == CODED) {
     if (keyCode == UP) {
@@ -13,6 +16,7 @@ void keyPressed() {
     }
   }
 }
+// キー解除コールバック
 void keyReleased() {
   if (key == CODED) {
     if (keyCode == UP) {
@@ -25,67 +29,68 @@ void keyReleased() {
   }
 }
 
-// Interfaces
-interface Updatable {
-  abstract void update(Body body);
+// インターフェース定義
+// step 更新メソッドを持つインターフェース
+interface Steppable {
+  void step(Body body);
 }
+// draw 描画メソッドを持つインターフェース
 interface Drawable {
-  abstract void draw(Body body);
+  void draw(Body body);
 }
 
-// Kill list
-Set killList;
+// 現時刻に削除する Body の予約セット
+Set killSet;
 
-// Player
-class PlayerData implements Updatable, Drawable {
-  public float radius;
-  public boolean touchGround;
+// プレイヤークラス
+class PlayerData implements Steppable, Drawable {
+  public float radius;        // 半径（見た目と剛体）
+  public boolean isGrounded;  // 地面接触フラグ
+  // デフォルトコンストラクタ
   public PlayerData() {
-    radius = 0.3f;
+    radius = 0.3f;      // ★ プレイヤーの大きさ
+    isGrounded = false;
   }
-  public void update(Body body) {
-    body.applyForce(new Vec2(0, -10), body.getPosition());
-  
-    PlayerData data = (PlayerData)body.getUserData();
-    if (!data.touchGround) return;
-    
-    float vx = 0;
-    
-    if (keyInUp) {
-      body.applyForce(new Vec2(0, 70), body.getPosition());
+  // step 更新メソッドの実装
+  public void step(Body body) {
+    Vec2 pos = body.getPosition();
+    // プレイヤー固有の擬似重力
+    body.applyForce(new Vec2(0, -9), pos);  // ★ 擬似重力
+    // ジャンプ
+    if (isGrounded && keyInUp) {
+      body.applyForce(new Vec2(0, 70), pos);  // ★ ジャンプ力
     }
-    if (keyInLeft) {
-      vx = -5.0f;
-    } else if (keyInRight) {
-      vx = 5.0f;
-    }
-  
+    // 歩行
+    float vx = keyInLeft ? -5 : (keyInRight ? 5 : 0); // ★ 移動速度
+    float acc = isGrounded ? 10 : 2;                  // ★ 加速度（接地：滞空）
+    float thresh = 0.8f;                              // ★ 速度閾値
     Vec2 vel = body.getLinearVelocity();
-    if (vel.x < vx - 0.8f) {
-      body.applyForce(new Vec2(10, 0), body.getPosition());
-    } else if (vel.x > vx + 0.8f) {
-      body.applyForce(new Vec2(-10, 0), body.getPosition());
+    if (vel.x < vx - thresh) {
+      body.applyForce(new Vec2(acc, 0), body.getPosition());
+    } else if (vel.x > vx + thresh) {
+      body.applyForce(new Vec2(-acc, 0), body.getPosition());
     }
-    
-    data.touchGround = false;
+    // 状態のクリア
+    isGrounded = false;
   }
+  // draw 描画メソッドの実装
   public void draw(Body body) {
-    PlayerData data = (PlayerData)body.getUserData();
     Vec2 pos = body.getPosition();
     translate(pos.x, pos.y);
-    ellipse(0, 0, data.radius * 2, data.radius * 2);
+    ellipse(0, 0, radius * 2, radius * 2);
   }
 }
+// プレイヤー生成関数
 Body spawnPlayer(World world) {
   PlayerData data = new PlayerData();
 
   CircleDef sd = new CircleDef();
   sd.radius = data.radius;
-  sd.density = 1.5f;
+  sd.density = 1.5f;        // ★ 体重（密度）
 
   BodyDef bd = new BodyDef();
-  bd.position.set(0, 1);
-  bd.linearDamping = 0.8f;
+  bd.position.set(0, 1);    // ★ 初期座標
+  bd.linearDamping = 0.8f;  // ★ 空気抵抗
   bd.userData = data;
 
   Body body = world.createBody(bd);
@@ -94,36 +99,36 @@ Body spawnPlayer(World world) {
   return body;
 }
 
-// Block
+// ブロッククラス
 class BlockData implements Drawable {
-  public float width;
-  public float height;
-  public BlockData() {
-    width = random(0.3f, 0.6f);
-    height = random(0.1f, 0.5f);
+  public float width;     // 幅
+  public float height;    // 高さ
+  // コンストラクタ
+  public BlockData(float width, float height) {
+    this.width = width;
+    this.height = height;
   }
-  public BlockData(float width_, float height_) {
-    width = width_;
-    height = height_;
-  }
+  // draw 描画メソッドの実装
   public void draw(Body body) {
-    BlockData data = (BlockData)body.getUserData();
     Vec2 pos = body.getPosition();
     translate(pos.x, pos.y);
     rotate(body.getAngle());
-    rect(-data.width, -data.height, data.width * 2, data.height * 2);
+    rect(-width, -height, width * 2, height * 2);
   }
 }
-Body spawnBlock(World world) {
-  BlockData data = new BlockData();
+// 可動ブロック生成関数
+Body spawnMovableBlock(World world) {
+  float width = random(0.4f, 1.0f);     // ★ 幅（ランダム）
+  float height = random(0.2f, 0.6f);    // ★ 高さ（ランダム）
+  BlockData data = new BlockData(width, height);
 
   PolygonDef sd = new PolygonDef();
-  sd.setAsBox(data.width, data.height);
-  sd.density = 1.0f;
-  sd.friction = 0.3f;
+  sd.setAsBox(width, height);
+  sd.density = 1.0f;                    // ★ 質量（密度）
+  sd.friction = 0.3f;                   // ★ 摩擦
 
   BodyDef bd = new BodyDef();
-  bd.position.set(random(-4, 4), 10);
+  bd.position.set(random(-4, 4), 10);   // ★ 初期座標
   bd.userData = data;
 
   Body body = world.createBody(bd);
@@ -131,12 +136,13 @@ Body spawnBlock(World world) {
   body.setMassFromShapes();
   return body;
 }
+// 固定ブロック生成関数
 Body spawnFixedBlock(World world, Vec2 pos) {
-  BlockData data = new BlockData(0.25f, 0.25f);
+  BlockData data = new BlockData(0.25f, 0.25f); // ★ 大きさ
 
   PolygonDef sd = new PolygonDef();
   sd.setAsBox(data.width, data.height);
-  sd.density = 100.0f;
+  sd.density = 100.0f;                  // ★ 質量（極端に重い！）
 
   BodyDef bd = new BodyDef();
   bd.position = pos;
@@ -148,37 +154,43 @@ Body spawnFixedBlock(World world, Vec2 pos) {
   return body;
 }
 
-// Blast
-class BlastData implements Updatable, Drawable {
-  public float radius;
-  public Set collideeSet;
-  public BlastData() {
-    radius = 3.0f;
-    collideeSet = new HashSet();
+// 爆風クラス
+class BlastData implements Steppable, Drawable {
+  public float radius;          // 爆風半径
+  public boolean isFatal;       // 有効ダメージフラグ
+  public Set overlapSet;        // 爆風を受ける剛体のセット
+  // コンストラクタ
+  public BlastData(float radius, boolean isFatal) {
+    this.radius = radius;
+    this.isFatal = isFatal;
+    overlapSet = new HashSet();
   }
-  public void update(Body body) {
-    for (Iterator i = collideeSet.iterator(); i.hasNext();) {
-      Body collidee = (Body)i.next();
-      Vec2 vec = collidee.getPosition().sub(body.getPosition());
-      float dist = vec.normalize();
-      if (dist < 2.0f && collidee.getUserData() instanceof BlockData) {
-        killList.add(collidee);
+  // step メソッドの実装
+  public void step(Body body) {
+    for (Iterator i = overlapSet.iterator(); i.hasNext();) {
+      Body victim = (Body)i.next();
+      if (isFatal) {
+        // 対象がブロックなら破壊
+        if (victim.getUserData() instanceof BlockData) killSet.add(victim);
       } else {
-        vec.mulLocal(75);
-        collidee.applyForce(vec, collidee.getPosition());
+        // 吹き飛ばし
+        Vec2 dest = victim.getPosition();
+        Vec2 vec = dest.sub(body.getPosition());
+        victim.applyForce(vec.mul(75.0f / vec.length()), dest);  // ★ 爆風の強さ
       }
     }
-    killList.add(body);
+    // １回の更新で自滅
+    killSet.add(body);
   }
+  // draw メソッドの実装
   public void draw(Body body) {
-    BlastData data = (BlastData)body.getUserData();
     Vec2 pos = body.getPosition();
     translate(pos.x, pos.y);
-    ellipse(0, 0, data.radius * 2, data.radius * 2);
+    ellipse(0, 0, radius * 2, radius * 2);
   }
 }
-Body spawnBlast(World world, Vec2 pos) {
-  BlastData data = new BlastData();
+Body spawnBlast(World world, Vec2 pos, float radius, boolean isFatal) {
+  BlastData data = new BlastData(radius, isFatal);
 
   CircleDef sd = new CircleDef();
   sd.radius = data.radius;
@@ -193,38 +205,44 @@ Body spawnBlast(World world, Vec2 pos) {
   return body;
 }
 
-// Bomb
-class BombData implements Updatable, Drawable {
-  public float radius;
-  public float life;
+// 爆弾クラス
+class BombData implements Steppable, Drawable {
+  public float radius;    // 半径
+  public float timer;     // 爆発までの残り時間
+  // コンストラクタ
   public BombData() {
-    radius = 0.3f;
-    life = 3.2f;
+    radius = 0.3f;        // ★ 半径
+    timer = 3.2f;        // ★ 爆発までの時間
   }
-  public void update(Body body) {
-    life -= 1.0f / frameRate;
-    if (life <= 0) {
-      spawnBlast(body.getWorld(), body.getPosition());
-      killList.add(body);
+  // step メソッドの実装
+  public void step(Body body) {
+    timer -= 1.0f / frameRate;
+    if (timer <= 0) {
+      // 爆風を生成して自滅
+      Vec2 pos = body.getPosition();
+      spawnBlast(body.getWorld(), pos, 1.0f, true);   // ★ ダメージ半径
+      spawnBlast(body.getWorld(), pos, 2.7f, false);  // ★ 吹き飛ばし半径
+      killSet.add(body);
     }
   }
+  // draw メソッドの実装
   public void draw(Body body) {
-    BombData data = (BombData)body.getUserData();
     Vec2 pos = body.getPosition();
     translate(pos.x, pos.y);
-    ellipse(0, 0, data.radius * 2, data.radius * 2);
+    ellipse(0, 0, radius * 2, radius * 2);
   }
 }
+// 爆弾クラスの生成
 Body spawnBomb(World world) {
   BombData data = new BombData();
 
   CircleDef sd = new CircleDef();
   sd.radius = data.radius;
-  sd.density = 1.0f;
-  sd.restitution = 0.3f;
+  sd.density = 0.3f;          // ★ 質量（密度）
+  sd.restitution = 0.3f;      // ★ 反射係数
 
   BodyDef bd = new BodyDef();
-  bd.position.set(random(-4, 4), 10);
+  bd.position.set(random(-4, 4), 10); // ★ 初期座標
   bd.userData = data;
 
   Body body = world.createBody(bd);
@@ -233,113 +251,101 @@ Body spawnBomb(World world) {
   return body;
 }
 
-World world;
-Body player;
-
+// カスタマイズされたコンタクトリスナー
 class GlobalContactListener implements ContactListener {
   public void add(ContactPoint point) {
-    Object ud1 = point.shape1.getBody().getUserData();
-    Object ud2 = point.shape2.getBody().getUserData();
+    Body body1 = point.shape1.getBody();
+    Body body2 = point.shape2.getBody();
+    Object ud1 = body1.getUserData();
+    Object ud2 = body2.getUserData();
+    // 爆風の当たり判定
     if (ud1 instanceof BlastData) {
-      ((BlastData)ud1).collideeSet.add(point.shape2.getBody());
-    }
-    if (ud2 instanceof BlastData) {
-      ((BlastData)ud2).collideeSet.add(point.shape1.getBody());
+      ((BlastData)ud1).overlapSet.add(body2);
+    } else if (ud2 instanceof BlastData) {
+      ((BlastData)ud2).overlapSet.add(body1);
     }
   }
   public void persist(ContactPoint point) {
-    Object ud1 = point.shape1.getBody().getUserData();
-    Object ud2 = point.shape2.getBody().getUserData();
-    if (ud1 instanceof PlayerData) {
-      if (ud2 instanceof BombData) {
-        point.shape2.getBody().applyForce(new Vec2(0, 50), point.shape2.getBody().getPosition());
-      }
-    }
-    if (ud2 instanceof PlayerData) {
-      if (ud1 instanceof BombData) {
-        point.shape1.getBody().applyForce(new Vec2(0, 50), point.shape1.getBody().getPosition());
-      }
-    }
   }
   public void remove(ContactPoint point) {
   }
   public void result(ContactResult point) {
     Object ud1 = point.shape1.getBody().getUserData();
     Object ud2 = point.shape2.getBody().getUserData();
-    float thresh = 0.8f;
+    // プレイヤーの接地判定
+    float thresh = sin(radians(45));    // ★ 最大登攀角
     if (ud1 instanceof PlayerData) {
-      ((PlayerData)ud1).touchGround |= (point.normal.y < thresh);
+      ((PlayerData)ud1).isGrounded |= (point.normal.y < thresh);
     } else if (ud2 instanceof PlayerData) {
-      ((PlayerData)ud2).touchGround |= (point.normal.y > thresh);
+      ((PlayerData)ud2).isGrounded |= (point.normal.y > thresh);
     }
   }
 }
 
-void setup() {
-  size(512, 512);
-  frameRate(30);
+// グローバルオブジェクト
+World world;
+Body player;
 
-  // World
-  {
+void setup() {
+  size(512, 512);   // ★ 画面の大きさ
+  frameRate(30);    // ★ 目標フレームレート
+  { // ワールドの初期化
     AABB worldAABB = new AABB();
     worldAABB.lowerBound.set(-20.0f, -10.0f);
     worldAABB.upperBound.set(+20.0f, +20.0f);
-    Vec2 gravity = new Vec2(0.0f, -2.8f);
+    Vec2 gravity = new Vec2(0.0f, -2.8f);     // ★ 重力加速度
     world = new World(worldAABB, gravity, true);
     world.setContactListener(new GlobalContactListener());
   }
-
-  // World border
-  {
+  { // 壁の初期化
     BodyDef bd = new BodyDef();
     bd.position.set(0.0f, 0.0f);
-    
     Body ground = world.createBody(bd);
-    
+    // 床
     PolygonDef sd = new PolygonDef();
     sd.setAsBox(20.0f, 1.0f, new Vec2(0, -1), 0);
     ground.createShape(sd);
-
-    sd = new PolygonDef();
+    // 左壁
     sd.setAsBox(1.0f, 20.0f, new Vec2(-6, 0), 0);
     ground.createShape(sd);
-
-    sd = new PolygonDef();
+    // 右壁
     sd.setAsBox(1.0f, 20.0f, new Vec2(6, 0), 0);
     ground.createShape(sd);
   }
-  
-  for (float x = -4.75f; x < 5.0f; x += 0.5f) {
+  // 床の固定ブロック
+  for (float x = -4.75f; x < 5.0f; x += 0.5f) {   // ★ 固定ブロックの大きさ等
     spawnFixedBlock(world, new Vec2(x, 0.25f));
   }
-  
+  // プレイヤーの初期化
   player = spawnPlayer(world);
 }
 
 void draw() {
+  // 描画基本設定
   smooth();
   noStroke();
   fill(50);
   background(255);
+  // 物理ワールドの座標系とスクリーン座標系の対応付け
   translate(width / 2, height);
   scale(width / 10, height / -10);
-  
-  killList = new HashSet();
-  
+  // ステップ前初期化
+  killSet = new HashSet();
+  //
   float dice = random(80);
   if (dice < 1) {
-    spawnBlock(world);
+    spawnMovableBlock(world);
   } else if (dice < 2) {
     spawnBomb(world);
   }
-
+  // step メソッドの呼び出し
   for (Body body = world.getBodyList(); body != null; body = body.getNext()) {
     Object ud = body.getUserData();
-    if (ud instanceof Updatable) ((Updatable)ud).update(body);
+    if (ud instanceof Steppable) ((Steppable)ud).step(body);
   }
-
+  // 物理挙動の時間を進める
   world.step(1.0f / frameRate, 4);
-
+  // draw メソッドの呼び出し
   for (Body body = world.getBodyList(); body != null; body = body.getNext()) {
     Object ud = body.getUserData();
     if (ud instanceof Drawable) {
@@ -348,9 +354,8 @@ void draw() {
       popMatrix();
     }
   }
-  
-  for (Iterator i = killList.iterator(); i.hasNext();) {
+  // 破棄予約の処理  
+  for (Iterator i = killSet.iterator(); i.hasNext();) {
     world.destroyBody((Body)i.next());
   }
 }
-
