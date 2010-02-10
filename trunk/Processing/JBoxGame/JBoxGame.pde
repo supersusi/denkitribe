@@ -91,7 +91,7 @@ Body spawnPlayer(World world) {
   sd.density = 1.5f;        // ★ 体重（密度）
 
   BodyDef bd = new BodyDef();
-  bd.position.set(0, 1);    // ★ 初期座標
+  bd.position.set(0, 2);    // ★ 初期座標
   bd.linearDamping = 0.8f;  // ★ 空気抵抗
   bd.userData = data;
 
@@ -105,17 +105,19 @@ Body spawnPlayer(World world) {
 class BlockData implements Drawable {
   public float width;     // 幅
   public float height;    // 高さ
+  public color cl;        // 色
   // コンストラクタ
-  public BlockData(float width, float height) {
+  public BlockData(float width, float height, color cl) {
     this.width = width;
     this.height = height;
+    this.cl = cl;
   }
   // draw 描画メソッドの実装
   public void draw(Body body) {
     Vec2 pos = body.getPosition();
     translate(pos.x, pos.y);
     rotate(body.getAngle());
-    fill(color(60, 60, 60));
+    fill(cl);
     rect(-width, -height, width * 2, height * 2);
   }
 }
@@ -123,7 +125,7 @@ class BlockData implements Drawable {
 Body spawnMovableBlock(World world) {
   float width = random(0.4f, 1.0f);     // ★ 幅（ランダム）
   float height = random(0.2f, 0.6f);    // ★ 高さ（ランダム）
-  BlockData data = new BlockData(width, height);
+  BlockData data = new BlockData(width, height, 0);
 
   PolygonDef sd = new PolygonDef();
   sd.setAsBox(width, height);
@@ -140,8 +142,9 @@ Body spawnMovableBlock(World world) {
   return body;
 }
 // 固定ブロック生成関数
-Body spawnFixedBlock(World world, Vec2 pos) {
-  BlockData data = new BlockData(0.25f, 0.25f); // ★ 大きさ
+Body spawnFixedBlock(World world, Vec2 pos,
+                     float width, float height, color cl) {
+  BlockData data = new BlockData(width, height, cl);
 
   PolygonDef sd = new PolygonDef();
   sd.setAsBox(data.width, data.height);
@@ -193,6 +196,7 @@ class BlastData implements Steppable, Drawable {
     ellipse(0, 0, radius * 2, radius * 2);
   }
 }
+// 爆風クラスの生成
 Body spawnBlast(World world, Vec2 pos, float radius, boolean isFatal) {
   BlastData data = new BlastData(radius, isFatal);
 
@@ -224,8 +228,8 @@ class BombData implements Steppable, Drawable {
     if (timer <= 0) {
       // 爆風を生成して自滅
       Vec2 pos = body.getPosition();
-      spawnBlast(body.getWorld(), pos, 1.0f, true);   // ★ ダメージ半径
-      spawnBlast(body.getWorld(), pos, 2.7f, false);  // ★ 吹き飛ばし半径
+      spawnBlast(body.getWorld(), pos, 1.3f, true);   // ★ ダメージ半径
+      spawnBlast(body.getWorld(), pos, 3.0f, false);  // ★ 吹き飛ばし半径
       killSet.add(body);
     }
   }
@@ -290,11 +294,15 @@ class GlobalContactListener implements ContactListener {
 // グローバルオブジェクト
 World world;
 Body player;
+Body floor;
 float bombInterval;
 
 void setup() {
   size(512, 512);   // ★ 画面の大きさ
   frameRate(30);    // ★ 目標フレームレート
+  // テキスト描画設定
+  textFont(loadFont("Optima-Regular-16.vlw"), 16);
+  textAlign(CENTER);
   { // ワールドの初期化
     AABB worldAABB = new AABB();
     worldAABB.lowerBound.set(-20.0f, -10.0f);
@@ -320,8 +328,10 @@ void setup() {
   }
   // 床の固定ブロック
   for (float x = -4.75f; x < 5.0f; x += 0.5f) {   // ★ 固定ブロックの大きさ等
-    spawnFixedBlock(world, new Vec2(x, 0.25f));
+    spawnFixedBlock(world, new Vec2(x, 0.75f), 0.25f, 0.25f, 0);
   }
+  floor = spawnFixedBlock(world, new Vec2(0, 0.25f),
+                          5.0f, 0.25f, color(140, 140, 0));
   // プレイヤーの初期化
   player = spawnPlayer(world);
   // 最初の爆弾生成までの時間
@@ -332,9 +342,9 @@ void draw() {
   // 描画基本設定
   smooth();
   noStroke();
-  fill(50);
   background(255);
   // 物理ワールドの座標系とスクリーン座標系の対応付け
+  pushMatrix();
   translate(width / 2, height);
   scale(width / 10, height / -10);
   // ステップ前初期化
@@ -367,6 +377,14 @@ void draw() {
   }
   // 破棄予約の処理  
   for (Iterator i = killSet.iterator(); i.hasNext();) {
-    world.destroyBody((Body)i.next());
+    Body body = (Body)i.next();
+    if (floor == body) floor = null; // 床破壊判定
+    world.destroyBody(body);
+  }
+  // ゲームオーバー表示
+  popMatrix();
+  if (floor == null) {
+    fill(0);
+    text("GAME OVER", width / 2, height / 2);
   }
 }
