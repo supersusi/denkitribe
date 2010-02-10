@@ -46,6 +46,7 @@ Set killSet;
 class PlayerData implements Steppable, Drawable {
   public float radius;        // 半径（見た目と剛体）
   public boolean isGrounded;  // 地面接触フラグ
+  public float time;
   // デフォルトコンストラクタ
   public PlayerData() {
     radius = 0.3f;      // ★ プレイヤーの大きさ
@@ -77,6 +78,7 @@ class PlayerData implements Steppable, Drawable {
   public void draw(Body body) {
     Vec2 pos = body.getPosition();
     translate(pos.x, pos.y);
+    fill(color(0, 100, 0));
     ellipse(0, 0, radius * 2, radius * 2);
   }
 }
@@ -113,6 +115,7 @@ class BlockData implements Drawable {
     Vec2 pos = body.getPosition();
     translate(pos.x, pos.y);
     rotate(body.getAngle());
+    fill(color(60, 60, 60));
     rect(-width, -height, width * 2, height * 2);
   }
 }
@@ -186,6 +189,7 @@ class BlastData implements Steppable, Drawable {
   public void draw(Body body) {
     Vec2 pos = body.getPosition();
     translate(pos.x, pos.y);
+    fill(color(200, 0, 0, 32));
     ellipse(0, 0, radius * 2, radius * 2);
   }
 }
@@ -212,7 +216,7 @@ class BombData implements Steppable, Drawable {
   // コンストラクタ
   public BombData() {
     radius = 0.3f;        // ★ 半径
-    timer = 3.2f;        // ★ 爆発までの時間
+    timer = 3.2f;         // ★ 爆発までの時間
   }
   // step メソッドの実装
   public void step(Body body) {
@@ -229,6 +233,7 @@ class BombData implements Steppable, Drawable {
   public void draw(Body body) {
     Vec2 pos = body.getPosition();
     translate(pos.x, pos.y);
+    fill(color(sin(timer * 20) * 100 + 100, 0, 0));
     ellipse(0, 0, radius * 2, radius * 2);
   }
 }
@@ -285,6 +290,7 @@ class GlobalContactListener implements ContactListener {
 // グローバルオブジェクト
 World world;
 Body player;
+float bombInterval;
 
 void setup() {
   size(512, 512);   // ★ 画面の大きさ
@@ -318,6 +324,8 @@ void setup() {
   }
   // プレイヤーの初期化
   player = spawnPlayer(world);
+  // 最初の爆弾生成までの時間
+  bombInterval = 1.5f;    // ★ 最初の爆弾生成
 }
 
 void draw() {
@@ -331,12 +339,15 @@ void draw() {
   scale(width / 10, height / -10);
   // ステップ前初期化
   killSet = new HashSet();
-  //
-  float dice = random(80);
-  if (dice < 1) {
+  // ブロックをランダムに生成
+  if (random(1.8f * frameRate) < 1) {   // ★ ブロックの平均生成間隔
     spawnMovableBlock(world);
-  } else if (dice < 2) {
+  }
+  // 爆弾を一定期間毎に生成
+  bombInterval -= 1.0f / frameRate;
+  if (bombInterval <= 0) {
     spawnBomb(world);
+    bombInterval = random(2.5f, 4.0f);
   }
   // step メソッドの呼び出し
   for (Body body = world.getBodyList(); body != null; body = body.getNext()) {
