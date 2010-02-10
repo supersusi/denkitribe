@@ -1,9 +1,10 @@
+// "Boxes and Bombs"
 // Processing + JBox2D ゲーム作例
 
-// キー入力
-boolean keyInLeft;
-boolean keyInRight;
-boolean keyInUp;
+// キー入力フラグ
+boolean keyInLeft;    // カーソル左キー
+boolean keyInRight;   // カーソル右キー
+boolean keyInUp;      // カーソル上キー
 // キー押下コールバック
 void keyPressed() {
   if (key == CODED) {
@@ -39,38 +40,33 @@ interface Drawable {
   void draw(Body body);
 }
 
-// 現時刻に削除する Body の予約セット
-Set killSet;
+// 現時刻に削除する Body の予約リスト
+Set killList;
 
 // プレイヤークラス
 class PlayerData implements Steppable, Drawable {
-  public float radius;        // 半径（見た目と剛体）
+  public float radius;        // 大きさ（半径）
   public boolean isGrounded;  // 地面接触フラグ
-  public float time;
   // デフォルトコンストラクタ
-  public PlayerData() {
-    radius = 0.3f;      // ★ プレイヤーの大きさ
+  public PlayerData(float radius) {
+    this.radius = radius;
     isGrounded = false;
   }
   // step 更新メソッドの実装
   public void step(Body body) {
     Vec2 pos = body.getPosition();
+    float mass = body.getMass();
     // プレイヤー固有の擬似重力
-    body.applyForce(new Vec2(0, -9), pos);  // ★ 擬似重力
+    body.applyForce(new Vec2(0, -30.0f * mass), pos);     // ★ 追加の重力
     // ジャンプ
     if (isGrounded && keyInUp) {
-      body.applyForce(new Vec2(0, 70), pos);  // ★ ジャンプ力
+      body.applyForce(new Vec2(0, 200.0f * mass), pos);   // ★ ジャンプ力
     }
     // 歩行
-    float vx = keyInLeft ? -5 : (keyInRight ? 5 : 0); // ★ 移動速度
-    float acc = isGrounded ? 10 : 2;                  // ★ 加速度（接地：滞空）
-    float thresh = 0.8f;                              // ★ 速度閾値
-    Vec2 vel = body.getLinearVelocity();
-    if (vel.x < vx - thresh) {
-      body.applyForce(new Vec2(acc, 0), body.getPosition());
-    } else if (vel.x > vx + thresh) {
-      body.applyForce(new Vec2(-acc, 0), body.getPosition());
-    }
+    float vx = 5.4f * (keyInLeft ? -1 : (keyInRight ? 1 : 0));  // ★ 移動速度
+    float thrust = isGrounded ? 15.0f : 5.0f; // ★ 加速係数（接地時／滞空時）
+    float force = (vx - body.getLinearVelocity().x) * mass * thrust;
+    body.applyForce(new Vec2(force, 0), pos);
     // 状態のクリア
     isGrounded = false;
   }
@@ -84,16 +80,13 @@ class PlayerData implements Steppable, Drawable {
 }
 // プレイヤー生成関数
 Body spawnPlayer(World world) {
-  PlayerData data = new PlayerData();
-
   CircleDef sd = new CircleDef();
-  sd.radius = data.radius;
-  sd.density = 1.5f;        // ★ 体重（密度）
+  sd.radius = 0.35f;          // ★ 大きさ（半径）
+  sd.density = 1.0f;          // ★ 質量（密度）
 
   BodyDef bd = new BodyDef();
-  bd.position.set(0, 2);    // ★ 初期座標
-  bd.linearDamping = 0.8f;  // ★ 空気抵抗
-  bd.userData = data;
+  bd.position.set(0, 2);      // ★ 初期座標
+  bd.userData = new PlayerData(sd.radius);
 
   Body body = world.createBody(bd);
   body.createShape(sd);
@@ -103,38 +96,37 @@ Body spawnPlayer(World world) {
 
 // ブロッククラス
 class BlockData implements Drawable {
-  public float width;     // 幅
-  public float height;    // 高さ
-  public color cl;        // 色
+  public float hx;          // 幅
+  public float hy;          // 高さ
+  public color col;         // 色
   // コンストラクタ
-  public BlockData(float width, float height, color cl) {
-    this.width = width;
-    this.height = height;
-    this.cl = cl;
+  public BlockData(float hx, float hy, color col) {
+    this.hx = hx;
+    this.hy = hy;
+    this.col = col;
   }
   // draw 描画メソッドの実装
   public void draw(Body body) {
     Vec2 pos = body.getPosition();
     translate(pos.x, pos.y);
     rotate(body.getAngle());
-    fill(cl);
-    rect(-width, -height, width * 2, height * 2);
+    fill(col);
+    rect(-hx, -hy, hx * 2, hy * 2);
   }
 }
 // 可動ブロック生成関数
 Body spawnMovableBlock(World world) {
-  float width = random(0.4f, 1.0f);     // ★ 幅（ランダム）
-  float height = random(0.2f, 0.6f);    // ★ 高さ（ランダム）
-  BlockData data = new BlockData(width, height, 0);
+  float hx = random(0.4f, 1.0f);        // ★ 幅（ランダム）
+  float hy = random(0.2f, 0.5f);        // ★ 高さ（ランダム）
 
   PolygonDef sd = new PolygonDef();
-  sd.setAsBox(width, height);
+  sd.setAsBox(hx, hy);
   sd.density = 1.0f;                    // ★ 質量（密度）
-  sd.friction = 0.3f;                   // ★ 摩擦
+  sd.friction = 0.3f;                   // ★ 摩擦係数
 
   BodyDef bd = new BodyDef();
   bd.position.set(random(-4, 4), 10);   // ★ 初期座標
-  bd.userData = data;
+  bd.userData = new BlockData(hx, hy, 0);
 
   Body body = world.createBody(bd);
   body.createShape(sd);
@@ -142,17 +134,14 @@ Body spawnMovableBlock(World world) {
   return body;
 }
 // 固定ブロック生成関数
-Body spawnFixedBlock(World world, Vec2 pos,
-                     float width, float height, color cl) {
-  BlockData data = new BlockData(width, height, cl);
-
+Body spawnFixedBlock(World world, Vec2 pos, float hx, float hy, color col) {
   PolygonDef sd = new PolygonDef();
-  sd.setAsBox(data.width, data.height);
-  sd.density = 100.0f;                  // ★ 質量（極端に重い！）
+  sd.setAsBox(hx, hy);
+  sd.density = 100.0f;                  // ★ 質量（極端に重く！）
 
   BodyDef bd = new BodyDef();
   bd.position = pos;
-  bd.userData = data;
+  bd.userData = new BlockData(hx, hy, col);
 
   Body body = world.createBody(bd);
   body.createShape(sd);
@@ -177,7 +166,7 @@ class BlastData implements Steppable, Drawable {
       Body victim = (Body)i.next();
       if (isFatal) {
         // 対象がブロックなら破壊
-        if (victim.getUserData() instanceof BlockData) killSet.add(victim);
+        if (victim.getUserData() instanceof BlockData) killList.add(victim);
       } else {
         // 吹き飛ばし
         Vec2 dest = victim.getPosition();
@@ -186,7 +175,7 @@ class BlastData implements Steppable, Drawable {
       }
     }
     // １回の更新で自滅
-    killSet.add(body);
+    killList.add(body);
   }
   // draw メソッドの実装
   public void draw(Body body) {
@@ -198,15 +187,13 @@ class BlastData implements Steppable, Drawable {
 }
 // 爆風クラスの生成
 Body spawnBlast(World world, Vec2 pos, float radius, boolean isFatal) {
-  BlastData data = new BlastData(radius, isFatal);
-
   CircleDef sd = new CircleDef();
-  sd.radius = data.radius;
+  sd.radius = radius;
   sd.isSensor = true;
 
   BodyDef bd = new BodyDef();
   bd.position = pos;
-  bd.userData = data;
+  bd.userData = new BlastData(radius, isFatal);
 
   Body body = world.createBody(bd);
   body.createShape(sd);
@@ -215,11 +202,11 @@ Body spawnBlast(World world, Vec2 pos, float radius, boolean isFatal) {
 
 // 爆弾クラス
 class BombData implements Steppable, Drawable {
-  public float radius;    // 半径
+  public float radius;    // 大きさ（半径）
   public float timer;     // 爆発までの残り時間
   // コンストラクタ
-  public BombData() {
-    radius = 0.3f;        // ★ 半径
+  public BombData(float radius) {
+    this.radius = radius;
     timer = 3.2f;         // ★ 爆発までの時間
   }
   // step メソッドの実装
@@ -228,31 +215,29 @@ class BombData implements Steppable, Drawable {
     if (timer <= 0) {
       // 爆風を生成して自滅
       Vec2 pos = body.getPosition();
-      spawnBlast(body.getWorld(), pos, 1.3f, true);   // ★ ダメージ半径
+      spawnBlast(body.getWorld(), pos, 1.2f, true);   // ★ ダメージ半径
       spawnBlast(body.getWorld(), pos, 3.0f, false);  // ★ 吹き飛ばし半径
-      killSet.add(body);
+      killList.add(body);
     }
   }
   // draw メソッドの実装
   public void draw(Body body) {
     Vec2 pos = body.getPosition();
     translate(pos.x, pos.y);
-    fill(color(sin(timer * 20) * 100 + 100, 0, 0));
+    fill(color(sin(timer * 20) * 100 + 100, 0, 0)); // 赤・黒に点滅
     ellipse(0, 0, radius * 2, radius * 2);
   }
 }
 // 爆弾クラスの生成
 Body spawnBomb(World world) {
-  BombData data = new BombData();
-
   CircleDef sd = new CircleDef();
-  sd.radius = data.radius;
-  sd.density = 0.3f;          // ★ 質量（密度）
+  sd.radius = 0.3f;           // ★ 大きさ（半径）
+  sd.density = 0.6f;          // ★ 質量（密度）
   sd.restitution = 0.3f;      // ★ 反射係数
 
   BodyDef bd = new BodyDef();
-  bd.position.set(random(-4, 4), 10); // ★ 初期座標
-  bd.userData = data;
+  bd.position.set(random(-4, 4), 10);   // ★ 初期座標
+  bd.userData = new BombData(sd.radius);
 
   Body body = world.createBody(bd);
   body.createShape(sd);
@@ -348,9 +333,9 @@ void draw() {
   translate(width / 2, height);
   scale(width / 10, height / -10);
   // ステップ前初期化
-  killSet = new HashSet();
+  killList = new HashSet();
   // ブロックをランダムに生成
-  if (random(1.8f * frameRate) < 1) {   // ★ ブロックの平均生成間隔
+  if (random(2.1f * frameRate) < 1) {   // ★ ブロックの平均生成間隔
     spawnMovableBlock(world);
   }
   // 爆弾を一定期間毎に生成
@@ -365,7 +350,7 @@ void draw() {
     if (ud instanceof Steppable) ((Steppable)ud).step(body);
   }
   // 物理挙動の時間を進める
-  world.step(1.0f / frameRate, 4);
+  world.step(1.0f / frameRate, 8);
   // draw メソッドの呼び出し
   for (Body body = world.getBodyList(); body != null; body = body.getNext()) {
     Object ud = body.getUserData();
@@ -376,7 +361,7 @@ void draw() {
     }
   }
   // 破棄予約の処理  
-  for (Iterator i = killSet.iterator(); i.hasNext();) {
+  for (Iterator i = killList.iterator(); i.hasNext();) {
     Body body = (Body)i.next();
     if (floor == body) floor = null; // 床破壊判定
     world.destroyBody(body);
