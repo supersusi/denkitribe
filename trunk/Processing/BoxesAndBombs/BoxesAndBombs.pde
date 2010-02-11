@@ -85,7 +85,7 @@ Body spawnPlayer(World world) {
   sd.density = 1.0f;          // ★ 質量（密度）
 
   BodyDef bd = new BodyDef();
-  bd.position.set(0, 2);      // ★ 初期座標
+  bd.position.set(0, 4);      // ★ 初期座標
   bd.userData = new PlayerData(sd.radius);
 
   Body body = world.createBody(bd);
@@ -116,8 +116,8 @@ class BlockData implements Drawable {
 }
 // 可動ブロック生成関数
 Body spawnMovableBlock(World world) {
-  float hx = random(0.4f, 1.0f);        // ★ 幅（ランダム）
-  float hy = random(0.2f, 0.5f);        // ★ 高さ（ランダム）
+  float hx = random(0.4f, 0.8f);        // ★ 幅（ランダム）
+  float hy = random(0.4f, 0.6f);        // ★ 高さ（ランダム）
 
   PolygonDef sd = new PolygonDef();
   sd.setAsBox(hx, hy);
@@ -312,8 +312,8 @@ void setup() {
     ground.createShape(sd);
   }
   // 床の固定ブロック
-  for (float x = -4.75f; x < 5.0f; x += 0.5f) {   // ★ 固定ブロックの大きさ等
-    spawnFixedBlock(world, new Vec2(x, 0.75f), 0.25f, 0.25f, 0);
+  for (float x = -4.5f; x < 5.0f; x += 1) {   // ★ 固定ブロックの大きさ等
+    spawnFixedBlock(world, new Vec2(x, 1), 0.5f, 0.5f, 0);
   }
   floor = spawnFixedBlock(world, new Vec2(0, 0.25f),
                           5.0f, 0.25f, color(140, 140, 0));
