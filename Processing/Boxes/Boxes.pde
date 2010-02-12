@@ -2,9 +2,7 @@
 // Processing + JBox2D ゲーム作例
 
 // draw 描画メソッドのインターフェース
-interface Drawable {
-  void draw(Body body);
-}
+interface Drawable { void draw(Body body); }
 
 // 箱クラス
 class Box implements Drawable {
@@ -56,19 +54,12 @@ void setup() {
   worldAABB.upperBound.set(+20, +20);
   Vec2 gravity = new Vec2(0, -8);       // ★ 重力加速度
   world = new World(worldAABB, gravity, true);
-  // 壁の初期化
+  // 地面の初期化
   BodyDef bd = new BodyDef();
-  Body wall = world.createBody(bd);
-  // 床
+  Body ground = world.createBody(bd);
   PolygonDef sd = new PolygonDef();
   sd.setAsBox(20.0f, 1.0f, new Vec2(0, -1), 0);
-  wall.createShape(sd);
-  // 左壁
-  sd.setAsBox(1.0f, 20.0f, new Vec2(-6, 0), 0);
-  wall.createShape(sd);
-  // 右壁
-  sd.setAsBox(1.0f, 20.0f, new Vec2(6, 0), 0);
-  wall.createShape(sd);
+  ground.createShape(sd);
 }
 
 void draw() {
