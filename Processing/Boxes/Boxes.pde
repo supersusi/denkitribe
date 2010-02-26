@@ -26,8 +26,8 @@ Body spawnBox(World world) {
   sd.density = 1.0f; // 重さ（密度）
 
   BodyDef bd = new BodyDef();
-  bd.position.set(random(-4, 4), 10); // 初期座標
-  bd.angle = random(0, PI);           // 初期角度
+  bd.position.set(random(-4, 4), 10); // 座標
+  bd.angle = random(0, PI);           // 角度
   bd.userData = new Box(hx, hy);
 
   Body body = world.createBody(bd);
@@ -81,3 +81,4 @@ void draw() {
     }
   }
 }
+
