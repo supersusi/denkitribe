@@ -4,92 +4,99 @@
 b2World *g_pWorld;
 
 struct EntityInfo {
-  float width, height;
+  float width;
+  float height;
 };
 
-float GenerateRandom(float min, float max) {
+float randf(float min, float max) {
   return (max - min) / RAND_MAX * random() + min;
 }
 
 @implementation ES1Renderer
 
-- (void)accelerometer:(UIAccelerometer *)accelerometer
-        didAccelerate:(UIAcceleration *)acceleration {
-  accX = acceleration.x;
-  accY = acceleration.y;
-}
-
-- (void)beginTouch:(CGPoint)point {
-}
-
-// Create an OpenGL ES 1.1 context
 - (id)init {
   if ((self = [super init])) {
     context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES1];
-
     if (!context || ![EAGLContext setCurrentContext:context]) {
       [self release];
       return nil;
     }
-
-    // Create default framebuffer object. The backing will be allocated for the current layer in -resizeFromLayer
     glGenFramebuffersOES(1, &defaultFramebuffer);
     glGenRenderbuffersOES(1, &colorRenderbuffer);
     glBindFramebufferOES(GL_FRAMEBUFFER_OES, defaultFramebuffer);
     glBindRenderbufferOES(GL_RENDERBUFFER_OES, colorRenderbuffer);
     glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, colorRenderbuffer);
   }
-  
-  [[UIAccelerometer sharedAccelerometer] setUpdateInterval:0];
-  [[UIAccelerometer sharedAccelerometer] setDelegate:self];
   return self;
 }
 
-- (void)render {
-  float aspect = (float)backingHeight / backingWidth;
-
-  if (g_pWorld == nil) {
-    g_pWorld = new b2World(b2Vec2(0, -10), false);
-    
-    b2BodyDef groundBodyDef;
-    groundBodyDef.position.Set(0, 0);
-    b2Body* pGroundBody = g_pWorld->CreateBody(&groundBodyDef);
-    
-    b2PolygonShape groundBox;
-    groundBox.SetAsBox(10, 1, b2Vec2(0, aspect * -10 - 1), 0);
-    pGroundBody->CreateFixture(&groundBox, 0.0f);
-    groundBox.SetAsBox(10, 1, b2Vec2(0, aspect * 10 + 1), 0);
-    pGroundBody->CreateFixture(&groundBox, 0.0f);
-    groundBox.SetAsBox(1, aspect * 10, b2Vec2(-11, 0), 0);
-    pGroundBody->CreateFixture(&groundBox, 0.0f);
-    groundBox.SetAsBox(1, aspect * 10, b2Vec2(11, 0), 0);
-    pGroundBody->CreateFixture(&groundBox, 0.0f);
-    
-    for (int i = 0; i < 32; ++i) {
-      b2BodyDef bodyDef;
-      bodyDef.type = b2_dynamicBody;
-      bodyDef.position.Set(GenerateRandom(-8, 8), GenerateRandom(-8, 8));
-      bodyDef.angle = GenerateRandom(0, 3.14159f);
-      b2Body *pBody = g_pWorld->CreateBody(&bodyDef);
-      
-      b2PolygonShape dynamicBox;
-      dynamicBox.SetAsBox(1.0f, 1.0f);
-      
-      b2FixtureDef fixtureDef;
-      fixtureDef.shape = &dynamicBox;
-      fixtureDef.density = 1.0f;
-      fixtureDef.friction = 0.3f;
-      fixtureDef.restitution = 0.6f;
-      pBody->CreateFixture(&fixtureDef);
-      
-      pBody->SetUserData(new EntityInfo);
-    }
+- (BOOL)resizeFromLayer:(CAEAGLLayer *)layer {	
+  glBindRenderbufferOES(GL_RENDERBUFFER_OES, colorRenderbuffer);
+  [context renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:layer];
+  glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &backingWidth);
+  glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &backingHeight);
+  if (glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) != GL_FRAMEBUFFER_COMPLETE_OES) {
+    NSLog(@"Failed to make complete framebuffer object %x", glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES));
+    return NO;
   }
+  return YES;
+}
+
+- (void)beginTouch:(CGPoint)point {
+}
+
+- (void)setupPhysics {
+  float aspect = (float)backingHeight / backingWidth;
+  g_pWorld = new b2World(b2Vec2(0, -10), false);
   
-  g_pWorld->SetGravity(b2Vec2(accX * 10, accY * 10));
+  b2BodyDef groundBodyDef;
+  groundBodyDef.position.Set(0, 0);
+  b2Body* pGroundBody = g_pWorld->CreateBody(&groundBodyDef);
   
-  g_pWorld->Step(1.0f / 30, 6, 2);
-  g_pWorld->ClearForces();
+  b2PolygonShape groundBox;
+  groundBox.SetAsBox(10, 1, b2Vec2(0, aspect * -10 - 1), 0);
+  pGroundBody->CreateFixture(&groundBox, 0.0f);
+  groundBox.SetAsBox(10, 1, b2Vec2(0, aspect * 10 + 1), 0);
+  pGroundBody->CreateFixture(&groundBox, 0.0f);
+  groundBox.SetAsBox(1, aspect * 10, b2Vec2(-11, 0), 0);
+  pGroundBody->CreateFixture(&groundBox, 0.0f);
+  groundBox.SetAsBox(1, aspect * 10, b2Vec2(11, 0), 0);
+  pGroundBody->CreateFixture(&groundBox, 0.0f);
+  
+  for (int i = 0; i < 32; ++i) {
+    b2BodyDef bodyDef;
+    bodyDef.type = b2_dynamicBody;
+    bodyDef.position.Set(randf(-8, 8), randf(-8, 8));
+    bodyDef.angle = randf(0, 3.14159f);
+    b2Body *pBody = g_pWorld->CreateBody(&bodyDef);
+    
+    b2PolygonShape dynamicBox;
+    dynamicBox.SetAsBox(1.0f, 1.0f);
+    
+    b2FixtureDef fixtureDef;
+    fixtureDef.shape = &dynamicBox;
+    fixtureDef.density = 1.0f;
+    fixtureDef.friction = 0.3f;
+    fixtureDef.restitution = 0.6f;
+    pBody->CreateFixture(&fixtureDef);
+    
+    pBody->SetUserData(new EntityInfo);
+  }
+}
+
+- (void)updateTime:(float)time gravityX:(float)gravx gravityY:(float)gravy {
+  if (g_pWorld == nil) {
+    [self setupPhysics];
+  } else {
+    g_pWorld->SetGravity(b2Vec2(gravx * 40, gravy * 40));
+    g_pWorld->Step(time, 6, 2);
+    g_pWorld->ClearForces();
+  }
+}
+
+- (void)render {
+  if (g_pWorld) {
+  float aspect = (float)backingHeight / backingWidth;
   
   glViewport(0, 0, backingWidth, backingHeight);
   
@@ -126,50 +133,30 @@ float GenerateRandom(float min, float max) {
     }
     pBody = pBody->GetNext();
   }
-  
+  }
   [context presentRenderbuffer:GL_RENDERBUFFER_OES];
 }
 
-- (BOOL)resizeFromLayer:(CAEAGLLayer *)layer
-{	
-    // Allocate color buffer backing based on the current layer size
-    glBindRenderbufferOES(GL_RENDERBUFFER_OES, colorRenderbuffer);
-    [context renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:layer];
-    glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &backingWidth);
-    glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &backingHeight);
+- (void)dealloc {
+  if (defaultFramebuffer) {
+    glDeleteFramebuffersOES(1, &defaultFramebuffer);
+    defaultFramebuffer = 0;
+  }
 
-    if (glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) != GL_FRAMEBUFFER_COMPLETE_OES)
-    {
-        NSLog(@"Failed to make complete framebuffer object %x", glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES));
-        return NO;
-    }
+  if (colorRenderbuffer) {
+    glDeleteRenderbuffersOES(1, &colorRenderbuffer);
+    colorRenderbuffer = 0;
+  }
 
-    return YES;
-}
+  // Tear down context
+  if ([EAGLContext currentContext] == context) {
+    [EAGLContext setCurrentContext:nil];
+  }
 
-- (void)dealloc
-{
-    // Tear down GL
-    if (defaultFramebuffer)
-    {
-        glDeleteFramebuffersOES(1, &defaultFramebuffer);
-        defaultFramebuffer = 0;
-    }
+  [context release];
+  context = nil;
 
-    if (colorRenderbuffer)
-    {
-        glDeleteRenderbuffersOES(1, &colorRenderbuffer);
-        colorRenderbuffer = 0;
-    }
-
-    // Tear down context
-    if ([EAGLContext currentContext] == context)
-        [EAGLContext setCurrentContext:nil];
-
-    [context release];
-    context = nil;
-
-    [super dealloc];
+  [super dealloc];
 }
 
 @end
