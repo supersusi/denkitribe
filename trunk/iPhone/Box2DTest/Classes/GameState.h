@@ -2,7 +2,7 @@
 #import <OpenGLES/ES1/gl.h>
 #import <OpenGLES/ES1/glext.h>
 
-@interface ES1Renderer : NSObject {
+@interface GameState : NSObject {
 @private
   EAGLContext *context;
   GLint backingWidth;

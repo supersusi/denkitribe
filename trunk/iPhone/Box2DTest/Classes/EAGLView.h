@@ -1,11 +1,11 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
-#import "ES1Renderer.h"
+#import "GameState.h"
 
 @interface EAGLView : UIView <UIAccelerometerDelegate>
 {    
 @private
-  ES1Renderer *renderer;
+  GameState *gameState;
   BOOL animating;
   id displayLink;
   CFTimeInterval frameStartTime;
