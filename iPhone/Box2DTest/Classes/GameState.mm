@@ -1,4 +1,4 @@
-#import "ES1Renderer.h"
+#import "GameState.h"
 #include <Box2D/Box2D.h>
 
 b2World *g_pWorld;
@@ -12,7 +12,7 @@ float randf(float min, float max) {
   return (max - min) / RAND_MAX * random() + min;
 }
 
-@implementation ES1Renderer
+@implementation GameState
 
 - (id)init {
   if ((self = [super init])) {

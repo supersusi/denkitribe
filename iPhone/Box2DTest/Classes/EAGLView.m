@@ -17,8 +17,8 @@
                                      kEAGLColorFormatRGBA8,
                                      kEAGLDrawablePropertyColorFormat, nil];
     
-    renderer = [[ES1Renderer alloc] init];
-    if (!renderer) {
+    gameState = [[GameState alloc] init];
+    if (!gameState) {
       [self release];
       return nil;
     }
@@ -34,15 +34,15 @@
 }
 
 - (void)drawView:(id)sender {
-  [renderer render];
+  [gameState render];
   CFTimeInterval currentTime = CFAbsoluteTimeGetCurrent();
-  [renderer updateTime:(currentTime - frameStartTime) gravityX:accelX gravityY:accelY];
+  [gameState updateTime:(currentTime - frameStartTime) gravityX:accelX gravityY:accelY];
   frameStartTime = currentTime;
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
   for (UITouch *touch in touches) {
-    [renderer beginTouch:[touch locationInView:self]];
+    [gameState beginTouch:[touch locationInView:self]];
   }
 }
 
@@ -53,7 +53,7 @@
 }
 
 - (void)layoutSubviews {
-  [renderer resizeFromLayer:(CAEAGLLayer*)self.layer];
+  [gameState resizeFromLayer:(CAEAGLLayer*)self.layer];
   [self drawView:nil];
 }
 
@@ -75,7 +75,7 @@
 }
 
 - (void)dealloc {
-  [renderer release];
+  [gameState release];
   [super dealloc];
 }
 
