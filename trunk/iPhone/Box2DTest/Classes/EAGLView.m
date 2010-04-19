@@ -141,4 +141,11 @@
     [super dealloc];
 }
 
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    for (UITouch *touch in touches) {
+        [renderer beginTouch:[touch locationInView:self]];
+    }
+}
+
 @end

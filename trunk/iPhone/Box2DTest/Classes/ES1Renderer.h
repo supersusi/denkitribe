@@ -29,6 +29,7 @@
 
 - (void)render;
 - (BOOL)resizeFromLayer:(CAEAGLLayer *)layer;
+- (void)beginTouch:(CGPoint)point;
 - (void)accelerometer:(UIAccelerometer *)accelerometer
         didAccelerate:(UIAcceleration *)acceleration;
 
