@@ -2,7 +2,14 @@
 #include <Box2D/Box2D.h>
 
 b2World *g_pWorld;
-b2Body *g_pBody;
+
+struct EntityInfo {
+  float width, height;
+};
+
+float GenerateRandom(float min, float max) {
+  return (max - min) / RAND_MAX * random() + min;
+}
 
 @implementation ES1Renderer
 
@@ -10,6 +17,9 @@ b2Body *g_pBody;
         didAccelerate:(UIAcceleration *)acceleration {
   accX = acceleration.x;
   accY = acceleration.y;
+}
+
+- (void)beginTouch:(CGPoint)point {
 }
 
 // Create an OpenGL ES 1.1 context
@@ -30,7 +40,7 @@ b2Body *g_pBody;
     glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, colorRenderbuffer);
   }
   
-  [[UIAccelerometer sharedAccelerometer] setUpdateInterval:(1.0f / 100)];
+  [[UIAccelerometer sharedAccelerometer] setUpdateInterval:0];
   [[UIAccelerometer sharedAccelerometer] setDelegate:self];
   return self;
 }
@@ -55,29 +65,31 @@ b2Body *g_pBody;
     groundBox.SetAsBox(1, aspect * 10, b2Vec2(11, 0), 0);
     pGroundBody->CreateFixture(&groundBox, 0.0f);
     
-    b2BodyDef bodyDef;
-    bodyDef.type = b2_dynamicBody;
-    bodyDef.position.Set(0.0f, 10.0f);
-    bodyDef.angle = 2;
-    g_pBody = g_pWorld->CreateBody(&bodyDef);
-    
-    b2PolygonShape dynamicBox;
-    dynamicBox.SetAsBox(1.0f, 1.0f);
-    
-    b2FixtureDef fixtureDef;
-    fixtureDef.shape = &dynamicBox;
-    fixtureDef.density = 1.0f;
-    fixtureDef.friction = 0.3f;
-    fixtureDef.restitution = 0.6f;
-    g_pBody->CreateFixture(&fixtureDef);
+    for (int i = 0; i < 32; ++i) {
+      b2BodyDef bodyDef;
+      bodyDef.type = b2_dynamicBody;
+      bodyDef.position.Set(GenerateRandom(-8, 8), GenerateRandom(-8, 8));
+      bodyDef.angle = GenerateRandom(0, 3.14159f);
+      b2Body *pBody = g_pWorld->CreateBody(&bodyDef);
+      
+      b2PolygonShape dynamicBox;
+      dynamicBox.SetAsBox(1.0f, 1.0f);
+      
+      b2FixtureDef fixtureDef;
+      fixtureDef.shape = &dynamicBox;
+      fixtureDef.density = 1.0f;
+      fixtureDef.friction = 0.3f;
+      fixtureDef.restitution = 0.6f;
+      pBody->CreateFixture(&fixtureDef);
+      
+      pBody->SetUserData(new EntityInfo);
+    }
   }
   
   g_pWorld->SetGravity(b2Vec2(accX * 10, accY * 10));
   
   g_pWorld->Step(1.0f / 30, 6, 2);
   g_pWorld->ClearForces();
-  b2Vec2 position = g_pBody->GetPosition();
-  float32 angle = g_pBody->GetAngle();
   
   glViewport(0, 0, backingWidth, backingHeight);
   
@@ -101,11 +113,19 @@ b2Body *g_pBody;
     glEnableClientState(GL_VERTEX_ARRAY);
   }
   
-  glPushMatrix();
-  glTranslatef(position.x, position.y, 0.0f);
-  glRotatef(angle * 180 / 3.14159f, 0, 0, 1);
-  glDrawArrays(GL_LINE_LOOP, 0, 4);
-  glPopMatrix();
+  b2Body *pBody = g_pWorld->GetBodyList();
+  while (pBody != nil) {
+    if (pBody->GetUserData() != nil) {
+      b2Vec2 position = pBody->GetPosition();
+      float32 angle = pBody->GetAngle();
+      glPushMatrix();
+      glTranslatef(position.x, position.y, 0.0f);
+      glRotatef(angle * 180 / 3.14159f, 0, 0, 1);
+      glDrawArrays(GL_LINE_LOOP, 0, 4);
+      glPopMatrix();
+    }
+    pBody = pBody->GetNext();
+  }
   
   [context presentRenderbuffer:GL_RENDERBUFFER_OES];
 }

@@ -15,5 +15,6 @@
 
 - (void)render;
 - (BOOL)resizeFromLayer:(CAEAGLLayer *)layer;
+- (void)beginTouch:(CGPoint)point;
 
 @end
