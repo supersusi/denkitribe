@@ -18,52 +18,51 @@ namespace {
 
 @implementation GameState
 
-@synthesize screenAspect;
+@synthesize innerWidth;
+@synthesize innerHeight;
 
-- (void)setup {
-  NSAssert(!g_pWorld, @"g_pWorld is already instantiated.");
-  g_pWorld = new b2World(b2Vec2(0, 0), false);
-  
-  { // 画面を囲む箱の構築
+- (id)initWithWidth:(float)width andHeight:(float)height {
+  if (self = [super init]) {
+    innerWidth = width;
+    innerHeight = height;
+    
+    NSAssert(!g_pWorld, @"ワールドが既に存在する");
+    g_pWorld = new b2World(b2Vec2(0, 0), false);
+    
+    // 画面を囲む四辺の箱
     b2BodyDef bodyDef;
     bodyDef.position.Set(0, 0);
     b2Body* pBody = g_pWorld->CreateBody(&bodyDef);
-    
-    float width = 10;
-    float height = screenAspect * width;
+    float dx = 0.5f * width;
+    float dy = 0.5f * height;
     b2PolygonShape shapes[4];
-    shapes[0].SetAsBox(width, 1, b2Vec2(0, -height - 1), 0);
-    shapes[1].SetAsBox(width, 1, b2Vec2(0, +height + 1), 0);
-    shapes[2].SetAsBox(1, height, b2Vec2(-width - 1, 0), 0);
-    shapes[3].SetAsBox(1, height, b2Vec2(+width + 1, 0), 0);
+    shapes[0].SetAsBox(dx, 1, b2Vec2(0, -dy - 1), 0);
+    shapes[1].SetAsBox(dx, 1, b2Vec2(0, +dy + 1), 0);
+    shapes[2].SetAsBox(1, dy, b2Vec2(-dx - 1, 0), 0);
+    shapes[3].SetAsBox(1, dy, b2Vec2(+dx + 1, 0), 0);
     for (int i = 0; i < 4; ++i) {
       pBody->CreateFixture(&shapes[i], 0);
     }
   }
-  /*
-  for (int i = 0; i < 32; ++i) {
-    b2BodyDef bodyDef;
-    bodyDef.type = b2_dynamicBody;
-    bodyDef.position.Set(randf(-8, 8), randf(-8, 8));
-    bodyDef.angle = randf(0, 3.14159f);
-    b2Body *pBody = g_pWorld->CreateBody(&bodyDef);
-    
-    b2PolygonShape dynamicBox;
-    dynamicBox.SetAsBox(1.0f, 1.0f);
-    
-    b2FixtureDef fixtureDef;
-    fixtureDef.shape = &dynamicBox;
-    fixtureDef.density = 1.0f;
-    fixtureDef.friction = 0.3f;
-    fixtureDef.restitution = 0.6f;
-    pBody->CreateFixture(&fixtureDef);
-    
-    pBody->SetUserData(new EntityInfo);
-  }
-   */
+  return self;
 }
 
-- (void)addBox:(float)ox yCoord:(float)oy {
+- (void)dealloc {
+  // Bodyに関連付けたユーザーデータの削除
+  b2Body *pBody = g_pWorld->GetBodyList();
+  while (pBody != nil) {
+    if (pBody->GetUserData()) {
+      delete static_cast<EntityInfo*>(pBody->GetUserData());
+    }
+    pBody = pBody->GetNext();
+  }
+  
+  delete g_pWorld;
+  
+  [super dealloc];
+}
+
+- (void)addBodyX:(float)ox andY:(float)oy {
   b2BodyDef bodyDef;
   bodyDef.type = b2_dynamicBody;
   bodyDef.position.Set(ox, oy);
@@ -82,27 +81,20 @@ namespace {
   pBody->SetUserData(new EntityInfo);
 }
 
-- (void)step:(float)time gravityX:(float)gravx gravityY:(float)gravy {
-  if (!g_pWorld) {
-    [self setup];
-  } else {
-    const float gravity = 40;
-    g_pWorld->SetGravity(b2Vec2(gravx * gravity, gravy * gravity));
-    g_pWorld->Step(time, 6, 2);
-    g_pWorld->ClearForces();
-  }
+- (void)stepTime:(float)time gravityX:(float)gravx gravityY:(float)gravy {
+  const float gravity = 40;
+  g_pWorld->SetGravity(b2Vec2(gravx * gravity, gravy * gravity));
+  g_pWorld->Step(time, 6, 2);
+  g_pWorld->ClearForces();
 }
 
 - (void)render {
-  if (!g_pWorld) return;
-  
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrthof(-1, 1, -screenAspect, screenAspect, 0, 100);
+  glOrthof(-0.5f * innerWidth, 0.5f * innerWidth, -0.5f * innerHeight, 0.5f * innerHeight, 0, 1);
   
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  glScalef(0.1f, 0.1f, 0.1f);
   
   glClearColor(0.95f, 0.95f, 0.95f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);

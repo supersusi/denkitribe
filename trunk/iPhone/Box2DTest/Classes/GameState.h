@@ -1,13 +1,15 @@
 @interface GameState : NSObject {
 @private
-  float screenAspect;
+  float innerWidth;
+  float innerHeight;
 }
 
-@property (nonatomic) float screenAspect;
+@property (nonatomic, readonly) float innerWidth;
+@property (nonatomic, readonly) float innerHeight;
 
-- (void)setup;
-- (void)addBox:(float)ox yCoord:(float)oy;
-- (void)step:(float)time gravityX:(float)gravx gravityY:(float)gravy;
+- (id)initWithWidth:(float)width andHeight:(float)height;
+- (void)addBodyX:(float)ox andY:(float)oy;
+- (void)stepTime:(float)time gravityX:(float)gravx gravityY:(float)gravy;
 - (void)render;
 
 @end
