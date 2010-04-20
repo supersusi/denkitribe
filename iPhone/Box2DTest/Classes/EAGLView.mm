@@ -47,7 +47,7 @@
   if (gameState) [gameState render];
   [context presentRenderbuffer:GL_RENDERBUFFER_OES];
   CFTimeInterval currentTime = CFAbsoluteTimeGetCurrent();
-  if (gameState) [gameState stepTime:(currentTime - frameStartTime) gravityX:accelX gravityY:accelY];
+  if (gameState) [gameState stepTime:(currentTime - frameStartTime) gravityX:accelX gravityY:-accelY];
   frameStartTime = currentTime;
 }
 

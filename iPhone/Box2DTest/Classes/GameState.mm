@@ -1,20 +1,17 @@
 #import "GameState.h"
 #import <OpenGLES/ES1/gl.h>
-
-#include <Box2D/Box2D.h>
-
-namespace {
-  b2World *g_pWorld;
-}
+#import <Box2D/Box2D.h>
 
 @interface Entity : NSObject {
-@public
   float width, height;
 }
+
 - (id)initWithWidth:(float)w andHeight:(float)h;
+- (void)drawWithBody:(b2Body*)body;
 @end
 
 @implementation Entity
+
 - (id)initWithWidth:(float)w andHeight:(float)h {
   if (self = [super init]) {
     width = w;
@@ -22,6 +19,17 @@ namespace {
   }
   return self;
 }
+
+- (void)drawWithBody:(b2Body*)body {
+  b2Vec2 position = body->GetPosition();
+  glPushMatrix();
+  glTranslatef(position.x, position.y, 0.0f);
+  glRotatef(body->GetAngle() * 180 / 3.14159f, 0, 0, 1);
+  glScalef(width, height, 1);
+  glDrawArrays(GL_LINE_LOOP, 0, 4);
+  glPopMatrix();
+}  
+
 @end
 
 @implementation GameState
@@ -34,20 +42,19 @@ namespace {
     innerWidth = width;
     innerHeight = height;
     
-    NSAssert(!g_pWorld, @"ワールドが既に存在する");
-    g_pWorld = new b2World(b2Vec2(0, 0), false);
+    world = new b2World(b2Vec2(0, 0), false);
     
     // 画面を囲む四辺の箱
     b2BodyDef bodyDef;
     bodyDef.position.Set(0, 0);
-    b2Body* pBody = g_pWorld->CreateBody(&bodyDef);
+    b2Body* body = world->CreateBody(&bodyDef);
     b2PolygonShape shapes[4];
     shapes[0].SetAsBox(innerWidth, 1, b2Vec2(0, -1), 0);
     shapes[1].SetAsBox(innerWidth, 1, b2Vec2(0, innerHeight + 1), 0);
     shapes[2].SetAsBox(1, innerHeight, b2Vec2(-1, 0), 0);
     shapes[3].SetAsBox(1, innerHeight, b2Vec2(innerWidth + 1, 0), 0);
     for (int i = 0; i < 4; ++i) {
-      pBody->CreateFixture(&shapes[i], 0);
+      body->CreateFixture(&shapes[i], 0);
     }
   }
   return self;
@@ -55,16 +62,14 @@ namespace {
 
 - (void)dealloc {
   // Bodyに関連付けたユーザーデータの削除
-  b2Body *pBody = g_pWorld->GetBodyList();
-  while (pBody != nil) {
-    if (pBody->GetUserData()) {
-      Entity* entity = (Entity*)pBody->GetUserData();
-      [entity dealloc];
-    }
-    pBody = pBody->GetNext();
+  b2Body *body = world->GetBodyList();
+  while (body != nil) {
+    Entity* entity = (Entity*)body->GetUserData();
+    if (entity) [entity dealloc];
+    body = body->GetNext();
   }
   
-  delete g_pWorld;
+  delete world;
   
   [super dealloc];
 }
@@ -73,7 +78,7 @@ namespace {
   b2BodyDef bodyDef;
   bodyDef.type = b2_dynamicBody;
   bodyDef.position.Set(ox, oy);
-  b2Body *pBody = g_pWorld->CreateBody(&bodyDef);
+  b2Body *body = world->CreateBody(&bodyDef);
   
   b2PolygonShape dynamicBox;
   dynamicBox.SetAsBox(0.5f, 0.5f);
@@ -83,16 +88,16 @@ namespace {
   fixtureDef.density = 1.0f;
   fixtureDef.friction = 0.3f;
   fixtureDef.restitution = 0.6f;
-  pBody->CreateFixture(&fixtureDef);
+  body->CreateFixture(&fixtureDef);
   
-  pBody->SetUserData([[Entity alloc] initWithWidth:0.5f andHeight:0.5f]);
+  body->SetUserData([[Entity alloc] initWithWidth:0.5f andHeight:0.5f]);
 }
 
 - (void)stepTime:(float)time gravityX:(float)gravx gravityY:(float)gravy {
   const float gravity = 40;
-  g_pWorld->SetGravity(b2Vec2(gravx * gravity, gravy * gravity));
-  g_pWorld->Step(time, 6, 2);
-  g_pWorld->ClearForces();
+  world->SetGravity(b2Vec2(gravx * gravity, gravy * gravity));
+  world->Step(time, 6, 2);
+  world->ClearForces();
 }
 
 - (void)render {
@@ -115,21 +120,11 @@ namespace {
     glEnableClientState(GL_VERTEX_ARRAY);
   }
   
-  b2Body *pBody = g_pWorld->GetBodyList();
-  while (pBody != nil) {
-    void *pUserData = pBody->GetUserData();
-    if (pUserData != nil) {
-      Entity *entity = (Entity*)pUserData;
-      b2Vec2 position = pBody->GetPosition();
-      float32 angle = pBody->GetAngle();
-      glPushMatrix();
-      glTranslatef(position.x, position.y, 0.0f);
-      glRotatef(angle * 180 / 3.14159f, 0, 0, 1);
-      glScalef(entity->width, entity->height, 1);
-      glDrawArrays(GL_LINE_LOOP, 0, 4);
-      glPopMatrix();
-    }
-    pBody = pBody->GetNext();
+  b2Body *body = world->GetBodyList();
+  while (body != nil) {
+    Entity *entity = (Entity*)body->GetUserData();
+    if (entity) [entity drawWithBody:body];
+    body = body->GetNext();
   }
 }
 

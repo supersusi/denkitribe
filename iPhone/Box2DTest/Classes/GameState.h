@@ -1,7 +1,10 @@
+class b2World;
+
 @interface GameState : NSObject {
 @private
   float innerWidth;
   float innerHeight;
+  b2World *world;
 }
 
 @property (nonatomic, readonly) float innerWidth;
