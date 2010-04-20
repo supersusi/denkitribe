@@ -33,13 +33,11 @@ namespace {
     b2BodyDef bodyDef;
     bodyDef.position.Set(0, 0);
     b2Body* pBody = g_pWorld->CreateBody(&bodyDef);
-    float dx = 0.5f * width;
-    float dy = 0.5f * height;
     b2PolygonShape shapes[4];
-    shapes[0].SetAsBox(dx, 1, b2Vec2(0, -dy - 1), 0);
-    shapes[1].SetAsBox(dx, 1, b2Vec2(0, +dy + 1), 0);
-    shapes[2].SetAsBox(1, dy, b2Vec2(-dx - 1, 0), 0);
-    shapes[3].SetAsBox(1, dy, b2Vec2(+dx + 1, 0), 0);
+    shapes[0].SetAsBox(innerWidth, 1, b2Vec2(0, -1), 0);
+    shapes[1].SetAsBox(innerWidth, 1, b2Vec2(0, innerHeight + 1), 0);
+    shapes[2].SetAsBox(1, innerHeight, b2Vec2(-1, 0), 0);
+    shapes[3].SetAsBox(1, innerHeight, b2Vec2(innerWidth + 1, 0), 0);
     for (int i = 0; i < 4; ++i) {
       pBody->CreateFixture(&shapes[i], 0);
     }
@@ -69,7 +67,7 @@ namespace {
   b2Body *pBody = g_pWorld->CreateBody(&bodyDef);
   
   b2PolygonShape dynamicBox;
-  dynamicBox.SetAsBox(1.0f, 1.0f);
+  dynamicBox.SetAsBox(0.5f, 0.5f);
   
   b2FixtureDef fixtureDef;
   fixtureDef.shape = &dynamicBox;
@@ -91,7 +89,7 @@ namespace {
 - (void)render {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrthof(-0.5f * innerWidth, 0.5f * innerWidth, -0.5f * innerHeight, 0.5f * innerHeight, 0, 1);
+  glOrthof(0, innerWidth, innerHeight, 0, 0, 1);
   
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -116,6 +114,7 @@ namespace {
       glPushMatrix();
       glTranslatef(position.x, position.y, 0.0f);
       glRotatef(angle * 180 / 3.14159f, 0, 0, 1);
+      glScalef(0.5f, 0.5f, 1);
       glDrawArrays(GL_LINE_LOOP, 0, 4);
       glPopMatrix();
     }
