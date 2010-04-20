@@ -29,16 +29,11 @@
     glBindFramebufferOES(GL_FRAMEBUFFER_OES, defaultFramebuffer);
     glBindRenderbufferOES(GL_RENDERBUFFER_OES, colorRenderbuffer);
     glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, colorRenderbuffer);
-    
-    gameState = [[GameState alloc] init];
-    if (!gameState) {
-      [self release];
-      return nil;
-    }
  
     [[UIAccelerometer sharedAccelerometer] setUpdateInterval:0];
     [[UIAccelerometer sharedAccelerometer] setDelegate:self];
-    
+
+    gameState = nil;
     animating = FALSE;
     displayLink = nil;
     frameStartTime = CFAbsoluteTimeGetCurrent();
@@ -49,17 +44,17 @@
 
 - (void)drawView:(id)sender {
   glViewport(0, 0, backingWidth, backingHeight);
-  [gameState render];
+  if (gameState) [gameState render];
   [context presentRenderbuffer:GL_RENDERBUFFER_OES];
   CFTimeInterval currentTime = CFAbsoluteTimeGetCurrent();
-  [gameState step:(currentTime - frameStartTime) gravityX:accelX gravityY:accelY];
+  if (gameState) [gameState stepTime:(currentTime - frameStartTime) gravityX:accelX gravityY:accelY];
   frameStartTime = currentTime;
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
   for (UITouch *touch in touches) {
     CGPoint point = [touch locationInView:self];
-    [gameState addBox:(point.x / backingWidth - 0.5f) * 20 yCoord:((backingHeight * 0.5f - point.y) / backingWidth) * 20];
+    [gameState addBodyX:(point.x / backingWidth - 0.5f) * 20 andY:((backingHeight * 0.5f - point.y) / backingWidth) * 20];
   }
 }
 
@@ -77,7 +72,10 @@
   if (glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) != GL_FRAMEBUFFER_COMPLETE_OES) {
     NSLog(@"Failed to make complete framebuffer object %x", glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES));
   } else {
-    gameState.screenAspect = (float)backingHeight / backingWidth;
+    if (!gameState) {
+      float aspect = (float)backingHeight / backingWidth;
+      gameState = [[GameState alloc] initWithWidth:20 andHeight:aspect * 20];
+    }
     [self drawView:nil];
   }
 }
