@@ -2,35 +2,178 @@
 #import <OpenGLES/ES1/gl.h>
 #import <Box2D/Box2D.h>
 
-@interface Entity : NSObject {
-  float width, height;
+float randf(float min, float max) {
+  return (max - min) * random() / RAND_MAX + min;
 }
 
-- (id)initWithWidth:(float)w andHeight:(float)h;
-- (void)drawWithBody:(b2Body*)body;
+@interface Entity : NSObject {
+  b2Body *body;
+  float width, height;
+}
+- (void)step;
+- (void)draw;
+@end
+
+@interface MovingBox : Entity {
+}
+- (id)initWithWorld:(b2World*)world
+           andWidth:(float)w
+          andHeight:(float)h
+        andPosition:(b2Vec2)pos
+           andAngle:(float)angle;
+@end
+
+@interface FixedBox : Entity {
+}
+- (id)initWithWorld:(b2World*)world
+           andWidth:(float)w
+          andHeight:(float)h
+        andPosition:(b2Vec2)pos
+           andAngle:(float)angle;
+@end
+
+@interface ForceField : Entity {
+}
+- (id)initWithWorld:(b2World*)world
+           andWidth:(float)w
+          andHeight:(float)h
+        andPosition:(b2Vec2)pos
+           andAngle:(float)angle;
 @end
 
 @implementation Entity
+- (void)step {
+}  
+- (void)draw {
+}  
+@end
 
-- (id)initWithWidth:(float)w andHeight:(float)h {
+@implementation MovingBox
+- (id)initWithWorld:(b2World*)world
+           andWidth:(float)w
+          andHeight:(float)h
+        andPosition:(b2Vec2)pos
+           andAngle:(float)angle {
   if (self = [super init]) {
     width = w;
     height = h;
+
+    b2BodyDef bodyDef;
+    bodyDef.type = b2_dynamicBody;
+    bodyDef.position = pos;
+    body = world->CreateBody(&bodyDef);
+    
+    b2PolygonShape dynamicBox;
+    dynamicBox.SetAsBox(w, h);
+    
+    b2FixtureDef fixtureDef;
+    fixtureDef.shape = &dynamicBox;
+    fixtureDef.density = 1.0f;
+    fixtureDef.friction = 0.3f;
+    fixtureDef.restitution = 0.6f;
+    body->CreateFixture(&fixtureDef);
+    
+    body->SetUserData(self);
   }
   return self;
 }
-
-- (void)drawWithBody:(b2Body*)body {
+- (void)draw {
   b2Vec2 position = body->GetPosition();
   glPushMatrix();
   glTranslatef(position.x, position.y, 0.0f);
   glRotatef(body->GetAngle() * 180 / 3.14159f, 0, 0, 1);
   glScalef(width, height, 1);
+  glColor4f(0.8f, 0.8f, 0.8f, 1);
   glDrawArrays(GL_LINE_LOOP, 0, 4);
   glPopMatrix();
 }  
-
 @end
+
+@implementation FixedBox
+- (id)initWithWorld:(b2World*)world
+           andWidth:(float)w
+          andHeight:(float)h
+        andPosition:(b2Vec2)pos
+           andAngle:(float)angle {
+  if (self = [super init]) {
+    width = w;
+    height = h;
+    
+    b2BodyDef bodyDef;
+    bodyDef.type = b2_staticBody;
+    bodyDef.position = pos;
+    body = world->CreateBody(&bodyDef);
+    
+    b2PolygonShape shape;
+    shape.SetAsBox(w, h);
+    
+    body->CreateFixture(&shape, 0);
+    
+    body->SetUserData(self);
+  }
+  return self;
+}
+- (void)draw {
+  b2Vec2 position = body->GetPosition();
+  glPushMatrix();
+  glTranslatef(position.x, position.y, 0.0f);
+  glRotatef(body->GetAngle() * 180 / 3.14159f, 0, 0, 1);
+  glScalef(width, height, 1);
+  glColor4f(0, 0, 0, 1);
+  glDrawArrays(GL_LINE_LOOP, 0, 4);
+  glPopMatrix();
+}  
+@end
+
+@implementation ForceField
+- (id)initWithWorld:(b2World*)world
+           andWidth:(float)w
+          andHeight:(float)h
+        andPosition:(b2Vec2)pos
+           andAngle:(float)angle {
+  if (self = [super init]) {
+    width = w;
+    height = h;
+    
+    b2BodyDef bodyDef;
+    bodyDef.type = b2_staticBody;
+    bodyDef.position = pos;
+    body = world->CreateBody(&bodyDef);
+    
+    b2PolygonShape shape;
+    shape.SetAsBox(w, h);
+    
+    b2FixtureDef fixtureDef;
+    fixtureDef.shape = &shape;
+    fixtureDef.isSensor = true;
+    body->CreateFixture(&fixtureDef);
+    
+    body->SetUserData(self);
+  }
+  return self;
+}
+- (void)draw {
+  b2Vec2 position = body->GetPosition();
+  glPushMatrix();
+  glTranslatef(position.x, position.y, 0.0f);
+  glRotatef(body->GetAngle() * 180 / 3.14159f, 0, 0, 1);
+  glScalef(width, height, 1);
+  glColor4f(1, 0.5f, 0.5f, 1);
+  glDrawArrays(GL_LINE_LOOP, 0, 4);
+  glPopMatrix();
+}  
+@end
+
+BOOL IsMovingBox(b2Body *body) {
+  id entity = (id)body->GetUserData();
+  return (entity && [entity isMemberOfClass:[MovingBox class]]);
+}
+
+BOOL IsForceField(b2Body *body) {
+  id entity = (id)body->GetUserData();
+  return (entity && [entity isMemberOfClass:[ForceField class]]);
+}
+
 
 @implementation GameState
 
@@ -55,6 +198,14 @@
     shapes[3].SetAsBox(1, innerHeight, b2Vec2(innerWidth + 1, 0), 0);
     for (int i = 0; i < 4; ++i) {
       body->CreateFixture(&shapes[i], 0);
+    }
+    
+    for (int i = 0; i < 8; ++i) {
+      if (random() & 1) {
+        [[FixedBox alloc] initWithWorld:world andWidth:randf(0.5f, 1.5f) andHeight:randf(0.5f, 1.5f) andPosition:b2Vec2(randf(0, innerWidth), randf(0, innerHeight)) andAngle:randf(-3.14159f, 3.14159f)];
+      } else {
+        [[ForceField alloc] initWithWorld:world andWidth:randf(0.5f, 1.5f) andHeight:randf(0.5f, 1.5f) andPosition:b2Vec2(randf(0, innerWidth), randf(0, innerHeight)) andAngle:randf(-3.14159f, 3.14159f)];
+      }
     }
   }
   return self;
@@ -101,28 +252,30 @@ public:
       return;
     }
   }
-
-  b2BodyDef bodyDef;
-  bodyDef.type = b2_dynamicBody;
-  bodyDef.position.Set(ox, oy);
-  b2Body *body = world->CreateBody(&bodyDef);
   
-  b2PolygonShape dynamicBox;
-  dynamicBox.SetAsBox(0.5f, 0.5f);
-  
-  b2FixtureDef fixtureDef;
-  fixtureDef.shape = &dynamicBox;
-  fixtureDef.density = 1.0f;
-  fixtureDef.friction = 0.3f;
-  fixtureDef.restitution = 0.6f;
-  body->CreateFixture(&fixtureDef);
-  
-  body->SetUserData([[Entity alloc] initWithWidth:0.5f andHeight:0.5f]);
+  if (random() & 1) {
+    [[MovingBox alloc] initWithWorld:world andWidth:0.5f andHeight:0.5f andPosition:b2Vec2(ox, oy) andAngle:0];
+  } else if (random() & 1) {
+    [[ForceField alloc] initWithWorld:world andWidth:1.0f andHeight:1.0f andPosition:b2Vec2(ox, oy) andAngle:0];
+  } else {
+    [[FixedBox alloc] initWithWorld:world andWidth:0.5f andHeight:0.5f andPosition:b2Vec2(ox, oy) andAngle:0];
+  }
 }
 
 - (void)stepTime:(float)time gravityX:(float)gravx gravityY:(float)gravy {
   const float gravity = 40;
   world->SetGravity(b2Vec2(gravx * gravity, gravy * gravity));
+  
+  for (b2Contact *contact = world->GetContactList(); contact; contact = contact->GetNext()) {
+    b2Body* bodyA = contact->GetFixtureA()->GetBody();
+    b2Body* bodyB = contact->GetFixtureB()->GetBody();
+    if (IsMovingBox(bodyA) && IsForceField(bodyB)) {
+      bodyA->ApplyForce(b2Vec2(50, 0), bodyA->GetWorldCenter());
+    } else if (IsMovingBox(bodyB) && IsForceField(bodyA)) {
+      bodyB->ApplyForce(b2Vec2(50, 0), bodyB->GetWorldCenter());
+    }
+  }
+  
   world->Step(time, 6, 2);
   world->ClearForces();
 }
@@ -150,7 +303,7 @@ public:
   b2Body *body = world->GetBodyList();
   while (body != nil) {
     Entity *entity = (Entity*)body->GetUserData();
-    if (entity) [entity drawWithBody:body];
+    if (entity) [entity draw];
     body = body->GetNext();
   }
 }
