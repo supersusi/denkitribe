@@ -54,7 +54,7 @@
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
   for (UITouch *touch in touches) {
     CGPoint point = [touch locationInView:self];
-    [gameState addBodyX:point.x / backingWidth * 10 andY:point.y / backingWidth * 10];
+    [gameState touchX:point.x / backingWidth * 10 andY:point.y / backingWidth * 10];
   }
 }
 

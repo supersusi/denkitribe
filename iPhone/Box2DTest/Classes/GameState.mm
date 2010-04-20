@@ -74,7 +74,34 @@
   [super dealloc];
 }
 
-- (void)addBodyX:(float)ox andY:(float)oy {
+class TouchQueryCallback : public b2QueryCallback {
+public:
+  b2Body* overlappedBody;
+  TouchQueryCallback() {
+    overlappedBody = NULL;
+  }
+  bool ReportFixture(b2Fixture* fixture) {
+    overlappedBody = fixture->GetBody();
+    return false;
+  }
+};
+
+- (void)touchX:(float)ox andY:(float)oy {
+  TouchQueryCallback callback;
+  b2AABB aabb;
+  aabb.lowerBound.Set(ox - 0.02f, oy - 0.02f);
+  aabb.upperBound.Set(ox + 0.02f, oy + 0.02f);
+  world->QueryAABB(&callback, aabb);
+  
+  if (callback.overlappedBody) {
+    Entity* entity = static_cast<Entity*>(callback.overlappedBody->GetUserData());
+    if (entity) {
+      [entity dealloc];
+      world->DestroyBody(callback.overlappedBody);
+      return;
+    }
+  }
+
   b2BodyDef bodyDef;
   bodyDef.type = b2_dynamicBody;
   bodyDef.position.Set(ox, oy);

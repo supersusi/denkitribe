@@ -11,7 +11,7 @@ class b2World;
 @property (nonatomic, readonly) float innerHeight;
 
 - (id)initWithWidth:(float)width andHeight:(float)height;
-- (void)addBodyX:(float)ox andY:(float)oy;
+- (void)touchX:(float)ox andY:(float)oy;
 - (void)stepTime:(float)time gravityX:(float)gravx gravityY:(float)gravy;
 - (void)render;
 
