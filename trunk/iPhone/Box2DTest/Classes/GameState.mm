@@ -1,68 +1,46 @@
 #import "GameState.h"
+#import <OpenGLES/ES1/gl.h>
+
 #include <Box2D/Box2D.h>
 
-b2World *g_pWorld;
-
-struct EntityInfo {
-  float width;
-  float height;
-};
-
-float randf(float min, float max) {
-  return (max - min) / RAND_MAX * random() + min;
+namespace {
+  b2World *g_pWorld;
+  
+  struct EntityInfo {
+    float width;
+    float height;
+  };
+  
+  float randf(float min, float max) {
+    return (max - min) / RAND_MAX * random() + min;
+  }
 }
 
 @implementation GameState
 
-- (id)init {
-  if ((self = [super init])) {
-    context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES1];
-    if (!context || ![EAGLContext setCurrentContext:context]) {
-      [self release];
-      return nil;
+@synthesize screenAspect;
+
+- (void)setup {
+  NSAssert(!g_pWorld, @"g_pWorld is already instantiated.");
+  g_pWorld = new b2World(b2Vec2(0, 0), false);
+  
+  { // 画面を囲む箱の構築
+    b2BodyDef bodyDef;
+    bodyDef.position.Set(0, 0);
+    b2Body* pBody = g_pWorld->CreateBody(&bodyDef);
+    
+    float width = 10;
+    float height = screenAspect * width;
+    b2PolygonShape shapes[4];
+    shapes[0].SetAsBox(width, 1, b2Vec2(0, -height - 1), 0);
+    shapes[1].SetAsBox(width, 1, b2Vec2(0, +height + 1), 0);
+    shapes[2].SetAsBox(1, height, b2Vec2(-width - 1, 0), 0);
+    shapes[3].SetAsBox(1, height, b2Vec2(+width + 1, 0), 0);
+    for (int i = 0; i < 4; ++i) {
+      pBody->CreateFixture(&shapes[i], 0);
     }
-    glGenFramebuffersOES(1, &defaultFramebuffer);
-    glGenRenderbuffersOES(1, &colorRenderbuffer);
-    glBindFramebufferOES(GL_FRAMEBUFFER_OES, defaultFramebuffer);
-    glBindRenderbufferOES(GL_RENDERBUFFER_OES, colorRenderbuffer);
-    glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, colorRenderbuffer);
   }
-  return self;
-}
-
-- (BOOL)resizeFromLayer:(CAEAGLLayer *)layer {	
-  glBindRenderbufferOES(GL_RENDERBUFFER_OES, colorRenderbuffer);
-  [context renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:layer];
-  glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &backingWidth);
-  glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &backingHeight);
-  if (glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) != GL_FRAMEBUFFER_COMPLETE_OES) {
-    NSLog(@"Failed to make complete framebuffer object %x", glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES));
-    return NO;
-  }
-  return YES;
-}
-
-- (void)beginTouch:(CGPoint)point {
-}
-
-- (void)setupPhysics {
-  float aspect = (float)backingHeight / backingWidth;
-  g_pWorld = new b2World(b2Vec2(0, -10), false);
-  
-  b2BodyDef groundBodyDef;
-  groundBodyDef.position.Set(0, 0);
-  b2Body* pGroundBody = g_pWorld->CreateBody(&groundBodyDef);
-  
-  b2PolygonShape groundBox;
-  groundBox.SetAsBox(10, 1, b2Vec2(0, aspect * -10 - 1), 0);
-  pGroundBody->CreateFixture(&groundBox, 0.0f);
-  groundBox.SetAsBox(10, 1, b2Vec2(0, aspect * 10 + 1), 0);
-  pGroundBody->CreateFixture(&groundBox, 0.0f);
-  groundBox.SetAsBox(1, aspect * 10, b2Vec2(-11, 0), 0);
-  pGroundBody->CreateFixture(&groundBox, 0.0f);
-  groundBox.SetAsBox(1, aspect * 10, b2Vec2(11, 0), 0);
-  pGroundBody->CreateFixture(&groundBox, 0.0f);
-  
+  /*
   for (int i = 0; i < 32; ++i) {
     b2BodyDef bodyDef;
     bodyDef.type = b2_dynamicBody;
@@ -82,27 +60,45 @@ float randf(float min, float max) {
     
     pBody->SetUserData(new EntityInfo);
   }
+   */
 }
 
-- (void)updateTime:(float)time gravityX:(float)gravx gravityY:(float)gravy {
-  if (g_pWorld == nil) {
-    [self setupPhysics];
+- (void)addBox:(float)ox yCoord:(float)oy {
+  b2BodyDef bodyDef;
+  bodyDef.type = b2_dynamicBody;
+  bodyDef.position.Set(ox, oy);
+  b2Body *pBody = g_pWorld->CreateBody(&bodyDef);
+  
+  b2PolygonShape dynamicBox;
+  dynamicBox.SetAsBox(1.0f, 1.0f);
+  
+  b2FixtureDef fixtureDef;
+  fixtureDef.shape = &dynamicBox;
+  fixtureDef.density = 1.0f;
+  fixtureDef.friction = 0.3f;
+  fixtureDef.restitution = 0.6f;
+  pBody->CreateFixture(&fixtureDef);
+  
+  pBody->SetUserData(new EntityInfo);
+}
+
+- (void)step:(float)time gravityX:(float)gravx gravityY:(float)gravy {
+  if (!g_pWorld) {
+    [self setup];
   } else {
-    g_pWorld->SetGravity(b2Vec2(gravx * 40, gravy * 40));
+    const float gravity = 40;
+    g_pWorld->SetGravity(b2Vec2(gravx * gravity, gravy * gravity));
     g_pWorld->Step(time, 6, 2);
     g_pWorld->ClearForces();
   }
 }
 
 - (void)render {
-  if (g_pWorld) {
-  float aspect = (float)backingHeight / backingWidth;
-  
-  glViewport(0, 0, backingWidth, backingHeight);
+  if (!g_pWorld) return;
   
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrthof(-1, 1, -aspect, aspect, 0, 100);
+  glOrthof(-1, 1, -screenAspect, screenAspect, 0, 100);
   
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -133,30 +129,6 @@ float randf(float min, float max) {
     }
     pBody = pBody->GetNext();
   }
-  }
-  [context presentRenderbuffer:GL_RENDERBUFFER_OES];
-}
-
-- (void)dealloc {
-  if (defaultFramebuffer) {
-    glDeleteFramebuffersOES(1, &defaultFramebuffer);
-    defaultFramebuffer = 0;
-  }
-
-  if (colorRenderbuffer) {
-    glDeleteRenderbuffersOES(1, &colorRenderbuffer);
-    colorRenderbuffer = 0;
-  }
-
-  // Tear down context
-  if ([EAGLContext currentContext] == context) {
-    [EAGLContext setCurrentContext:nil];
-  }
-
-  [context release];
-  context = nil;
-
-  [super dealloc];
 }
 
 @end
