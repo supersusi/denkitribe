@@ -54,7 +54,7 @@
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
   for (UITouch *touch in touches) {
     CGPoint point = [touch locationInView:self];
-    [gameState addBodyX:(point.x / backingWidth - 0.5f) * 20 andY:((backingHeight * 0.5f - point.y) / backingWidth) * 20];
+    [gameState addBodyX:point.x / backingWidth * 10 andY:point.y / backingWidth * 10];
   }
 }
 
@@ -74,7 +74,7 @@
   } else {
     if (!gameState) {
       float aspect = (float)backingHeight / backingWidth;
-      gameState = [[GameState alloc] initWithWidth:20 andHeight:aspect * 20];
+      gameState = [[GameState alloc] initWithWidth:10 andHeight:aspect * 10];
     }
     [self drawView:nil];
   }
