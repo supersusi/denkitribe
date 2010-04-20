@@ -5,16 +5,24 @@
 
 namespace {
   b2World *g_pWorld;
-  
-  struct EntityInfo {
-    float width;
-    float height;
-  };
-  
-  float randf(float min, float max) {
-    return (max - min) / RAND_MAX * random() + min;
-  }
 }
+
+@interface Entity : NSObject {
+@public
+  float width, height;
+}
+- (id)initWithWidth:(float)w andHeight:(float)h;
+@end
+
+@implementation Entity
+- (id)initWithWidth:(float)w andHeight:(float)h {
+  if (self = [super init]) {
+    width = w;
+    height = h;
+  }
+  return self;
+}
+@end
 
 @implementation GameState
 
@@ -50,7 +58,8 @@ namespace {
   b2Body *pBody = g_pWorld->GetBodyList();
   while (pBody != nil) {
     if (pBody->GetUserData()) {
-      delete static_cast<EntityInfo*>(pBody->GetUserData());
+      Entity* entity = (Entity*)pBody->GetUserData();
+      [entity dealloc];
     }
     pBody = pBody->GetNext();
   }
@@ -76,7 +85,7 @@ namespace {
   fixtureDef.restitution = 0.6f;
   pBody->CreateFixture(&fixtureDef);
   
-  pBody->SetUserData(new EntityInfo);
+  pBody->SetUserData([[Entity alloc] initWithWidth:0.5f andHeight:0.5f]);
 }
 
 - (void)stepTime:(float)time gravityX:(float)gravx gravityY:(float)gravy {
@@ -108,13 +117,15 @@ namespace {
   
   b2Body *pBody = g_pWorld->GetBodyList();
   while (pBody != nil) {
-    if (pBody->GetUserData() != nil) {
+    void *pUserData = pBody->GetUserData();
+    if (pUserData != nil) {
+      Entity *entity = (Entity*)pUserData;
       b2Vec2 position = pBody->GetPosition();
       float32 angle = pBody->GetAngle();
       glPushMatrix();
       glTranslatef(position.x, position.y, 0.0f);
       glRotatef(angle * 180 / 3.14159f, 0, 0, 1);
-      glScalef(0.5f, 0.5f, 1);
+      glScalef(entity->width, entity->height, 1);
       glDrawArrays(GL_LINE_LOOP, 0, 4);
       glPopMatrix();
     }
