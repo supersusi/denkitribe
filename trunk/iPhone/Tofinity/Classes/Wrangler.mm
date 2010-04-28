@@ -14,11 +14,13 @@
         bodyDef.position.Set(0, 0);
         b2Body* body = world->CreateBody(&bodyDef);
 
+        float wext = size.width / 2;
+        float hext = size.height / 2;
         b2PolygonShape shapes[4];
-        shapes[0].SetAsBox(size.width, 1, b2Vec2(0, -1), 0);
-        shapes[1].SetAsBox(size.width, 1, b2Vec2(0, size.height + 1), 0);
-        shapes[2].SetAsBox(1, size.height, b2Vec2(-1, 0), 0);
-        shapes[3].SetAsBox(1, size.height, b2Vec2(size.width + 1, 0), 0);
+        shapes[0].SetAsBox(wext, 1, b2Vec2(wext, -1), 0);
+        shapes[1].SetAsBox(wext, 1, b2Vec2(wext, size.height + 1), 0);
+        shapes[2].SetAsBox(1, hext, b2Vec2(-1, hext), 0);
+        shapes[3].SetAsBox(1, hext, b2Vec2(size.width + 1, hext), 0);
         
         for (int i = 0; i < 4; ++i) {
             b2FixtureDef fixtureDef;

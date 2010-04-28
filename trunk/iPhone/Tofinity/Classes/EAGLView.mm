@@ -83,8 +83,8 @@
               glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES));
     } else {
         if (!wrangler) {
-            float height = 10.0f * backingHeight / backingWidth;
-            wrangler = [[Wrangler alloc] initWithSize:CGSizeMake(10, height)];
+            float aspect = (float)backingWidth / backingHeight;
+            wrangler = [[Wrangler alloc] initWithSize:CGSizeMake(10, 10.0f / aspect)];
         }
         [self drawView:nil];
     }
