@@ -19,8 +19,11 @@
         shapes[1].SetAsBox(size.width, 1, b2Vec2(0, size.height + 1), 0);
         shapes[2].SetAsBox(1, size.height, b2Vec2(-1, 0), 0);
         shapes[3].SetAsBox(1, size.height, b2Vec2(size.width + 1, 0), 0);
+        
         for (int i = 0; i < 4; ++i) {
-            body->CreateFixture(&shapes[i], 0);
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &shapes[i];
+            body->CreateFixture(&fixtureDef);
         }
     }
     return self;
