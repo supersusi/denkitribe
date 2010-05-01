@@ -19,16 +19,6 @@
 		isa = PBXBookmark;
 		fRef = 0F265B59118159AE003A0664 /* Default-Landscape.png */;
 	};
-	0F5C536C1189410100178558 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 0FADF4CD117EF49E005579A2 /* Wrangler.mm */;
-		name = "Wrangler.mm: 17";
-		rLen = 366;
-		rLoc = 386;
-		rType = 0;
-		vrLen = 1207;
-		vrLoc = 333;
-	};
 	0F5C536D1189410100178558 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = 1D3623240D0F684500981E51 /* TofinityAppDelegate.h */;
@@ -38,27 +28,6 @@
 		rType = 0;
 		vrLen = 422;
 		vrLoc = 0;
-	};
-	0FAD5F09118BD04E00C00433 /* PBXBookmark */ = {
-		isa = PBXBookmark;
-		fRef = 0FAD5EFC118BCEC400C00433 /* Icon.png */;
-	};
-	0FAD5F0A118BD04E00C00433 /* PBXBookmark */ = {
-		isa = PBXBookmark;
-		fRef = 0FAD5EFE118BCED600C00433 /* Icon-iPad.png */;
-	};
-	0FAD5F0B118BD04E00C00433 /* PlistBookmark */ = {
-		isa = PlistBookmark;
-		fRef = 8D1107310486CEB800E47090 /* Tofinity-Info.plist */;
-		fallbackIsa = PBXBookmark;
-		isK = 0;
-		kPath = (
-			CFBundleIconFiles,
-			1,
-		);
-		name = "/Users/keijiro/Documents/iPhone/Tofinity/Tofinity-Info.plist";
-		rLen = 0;
-		rLoc = 9223372036854775807;
 	};
 	0FAD5F0C118BD04E00C00433 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -108,16 +77,6 @@
 		rLoc = 106;
 		rType = 0;
 		vrLen = 253;
-		vrLoc = 0;
-	};
-	0FAD5F11118BD04E00C00433 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 0FADF4CD117EF49E005579A2 /* Wrangler.mm */;
-		name = "Wrangler.mm: 2";
-		rLen = 0;
-		rLoc = 37;
-		rType = 0;
-		vrLen = 1154;
 		vrLoc = 0;
 	};
 	0FADF44C117EF452005579A2 /* Tofinity */ = {
@@ -173,7 +132,7 @@
 	};
 	0FADF4CD117EF49E005579A2 /* Wrangler.mm */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {988, 1710}}";
+			sepNavIntBoundsRect = "{{0, 0}, {988, 1695}}";
 			sepNavSelRange = "{37, 0}";
 			sepNavVisRange = "{0, 1154}";
 			sepNavWindowFrame = "{{15, 215}, {750, 558}}";
@@ -188,6 +147,50 @@
 		rType = 0;
 		vrLen = 766;
 		vrLoc = 45;
+	};
+	0FE81F7D118BD7E9000CDCD2 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 0FADF4CD117EF49E005579A2 /* Wrangler.mm */;
+		name = "Wrangler.mm: 2";
+		rLen = 0;
+		rLoc = 37;
+		rType = 0;
+		vrLen = 1154;
+		vrLoc = 0;
+	};
+	0FE81F7E118BD7E9000CDCD2 /* PBXBookmark */ = {
+		isa = PBXBookmark;
+		fRef = 0FAD5EFE118BCED600C00433 /* Icon-iPad.png */;
+	};
+	0FE81F7F118BD7E9000CDCD2 /* PBXBookmark */ = {
+		isa = PBXBookmark;
+		fRef = 0FAD5EFC118BCEC400C00433 /* Icon.png */;
+	};
+	0FE81F80118BD7E9000CDCD2 /* PlistBookmark */ = {
+		isa = PlistBookmark;
+		fRef = 8D1107310486CEB800E47090 /* Tofinity-Info.plist */;
+		fallbackIsa = PBXBookmark;
+		isK = 0;
+		kPath = (
+			CFBundleIconFiles,
+			0,
+		);
+		name = "/Users/keijiro/Documents/iPhone/Tofinity/Tofinity-Info.plist";
+		rLen = 0;
+		rLoc = 9223372036854775807;
+	};
+	0FE81F81118BD7E9000CDCD2 /* PlistBookmark */ = {
+		isa = PlistBookmark;
+		fRef = 8D1107310486CEB800E47090 /* Tofinity-Info.plist */;
+		fallbackIsa = PBXBookmark;
+		isK = 0;
+		kPath = (
+			CFBundleIconFiles,
+			0,
+		);
+		name = "/Users/keijiro/Documents/iPhone/Tofinity/Tofinity-Info.plist";
+		rLen = 0;
+		rLoc = 9223372036854775807;
 	};
 	1D3623240D0F684500981E51 /* TofinityAppDelegate.h */ = {
 		uiCtxt = {
@@ -280,23 +283,23 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 294375067;
-			PBXWorkspaceStateSaveDate = 294375067;
+			PBXPerProjectTemplateStateSaveDate = 294377112;
+			PBXWorkspaceStateSaveDate = 294377112;
 		};
 		perUserProjectItems = {
 			0F265B8311816051003A0664 /* PBXBookmark */ = 0F265B8311816051003A0664 /* PBXBookmark */;
-			0F5C536C1189410100178558 /* PBXTextBookmark */ = 0F5C536C1189410100178558 /* PBXTextBookmark */;
 			0F5C536D1189410100178558 /* PBXTextBookmark */ = 0F5C536D1189410100178558 /* PBXTextBookmark */;
-			0FAD5F09118BD04E00C00433 /* PBXBookmark */ = 0FAD5F09118BD04E00C00433 /* PBXBookmark */;
-			0FAD5F0A118BD04E00C00433 /* PBXBookmark */ = 0FAD5F0A118BD04E00C00433 /* PBXBookmark */;
-			0FAD5F0B118BD04E00C00433 /* PlistBookmark */ = 0FAD5F0B118BD04E00C00433 /* PlistBookmark */;
 			0FAD5F0C118BD04E00C00433 /* PBXTextBookmark */ = 0FAD5F0C118BD04E00C00433 /* PBXTextBookmark */;
 			0FAD5F0D118BD04E00C00433 /* PBXTextBookmark */ = 0FAD5F0D118BD04E00C00433 /* PBXTextBookmark */;
 			0FAD5F0E118BD04E00C00433 /* PBXTextBookmark */ = 0FAD5F0E118BD04E00C00433 /* PBXTextBookmark */;
 			0FAD5F0F118BD04E00C00433 /* PBXTextBookmark */ = 0FAD5F0F118BD04E00C00433 /* PBXTextBookmark */;
 			0FAD5F10118BD04E00C00433 /* PBXTextBookmark */ = 0FAD5F10118BD04E00C00433 /* PBXTextBookmark */;
-			0FAD5F11118BD04E00C00433 /* PBXTextBookmark */ = 0FAD5F11118BD04E00C00433 /* PBXTextBookmark */;
 			0FE0428C118ADFA20072EB4C /* PBXTextBookmark */ = 0FE0428C118ADFA20072EB4C /* PBXTextBookmark */;
+			0FE81F7D118BD7E9000CDCD2 /* PBXTextBookmark */ = 0FE81F7D118BD7E9000CDCD2 /* PBXTextBookmark */;
+			0FE81F7E118BD7E9000CDCD2 /* PBXBookmark */ = 0FE81F7E118BD7E9000CDCD2 /* PBXBookmark */;
+			0FE81F7F118BD7E9000CDCD2 /* PBXBookmark */ = 0FE81F7F118BD7E9000CDCD2 /* PBXBookmark */;
+			0FE81F80118BD7E9000CDCD2 /* PlistBookmark */ = 0FE81F80118BD7E9000CDCD2 /* PlistBookmark */;
+			0FE81F81118BD7E9000CDCD2 /* PlistBookmark */ = 0FE81F81118BD7E9000CDCD2 /* PlistBookmark */;
 		};
 		sourceControlManager = 0FADF459117EF46E005579A2 /* Source Control */;
 		userBuildSettings = {
