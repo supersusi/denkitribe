@@ -32,14 +32,10 @@
                                      GL_RENDERBUFFER_OES,
                                      colorRenderbuffer);
 
-        [[UIAccelerometer sharedAccelerometer] setUpdateInterval:0];
-        [[UIAccelerometer sharedAccelerometer] setDelegate:self];
-
-        frameStartTime = CFAbsoluteTimeGetCurrent();
-
         animating = FALSE;
         displayLink = nil;
         wrangler = nil;
+        frameStartTime = CFAbsoluteTimeGetCurrent();
         accelX = accelY = 0;
     }
     return self;
@@ -49,10 +45,10 @@
     glViewport(0, 0, backingWidth, backingHeight);
     if (wrangler) [wrangler render];
     [context presentRenderbuffer:GL_RENDERBUFFER_OES];
-    
+
     CFTimeInterval currentTime = CFAbsoluteTimeGetCurrent();
-    if (wrangler) [wrangler stepTime:(currentTime - frameStartTime)
-                             gravity:b2Vec2(accelX, -accelY)];
+    CFTimeInterval interval = MIN(currentTime - frameStartTime, 3.0 / 60);
+    if (wrangler) [wrangler stepTime:interval gravity:b2Vec2(accelX, accelY)];
     frameStartTime = currentTime;
 }
 
@@ -67,7 +63,7 @@
 - (void)accelerometer:(UIAccelerometer*)accelerometer
         didAccelerate:(UIAcceleration*)acceleration {
     accelX = acceleration.x;
-    accelY = acceleration.y;
+    accelY = -acceleration.y;
 }
 
 - (void)layoutSubviews {
@@ -97,6 +93,11 @@
         [displayLink setFrameInterval:1];
         [displayLink addToRunLoop:[NSRunLoop currentRunLoop]
                           forMode:NSDefaultRunLoopMode];
+        
+        [[UIAccelerometer sharedAccelerometer] setUpdateInterval:(1.0 / 15)];
+        [[UIAccelerometer sharedAccelerometer] setDelegate:self];
+        
+        frameStartTime = CFAbsoluteTimeGetCurrent();
         animating = TRUE;
     }
 }
