@@ -11,9 +11,9 @@ void sendNote(int key) {
   digitalWrite(SS_PIN, HIGH);
 
   digitalWrite(kGatePin, HIGH);
-  delay(400);
+  delay(90);
   digitalWrite(kGatePin, LOW);
-  delay(100);
+  delay(10);
 }
 
 void setup() {
@@ -22,12 +22,39 @@ void setup() {
 
 void loop() {
   sendNote(0);
-  sendNote(2);
-  sendNote(4);
-  sendNote(5);
-  sendNote(7);
-  sendNote(9);
+  sendNote(12);
   sendNote(11);
+  sendNote(12);
+  sendNote(16);
+  sendNote(12);
+  sendNote(11);
+  sendNote(12);
+
+  sendNote(0);
+  sendNote(12);
+  sendNote(10);
+  sendNote(12);
+  sendNote(16);
+  sendNote(12);
+  sendNote(10);
+  sendNote(12);
+
+  sendNote(0);
+  sendNote(12);
+  sendNote(9);
+  sendNote(12);
+  sendNote(16);
+  sendNote(12);
+  sendNote(9);
+  sendNote(12);
+
+  sendNote(0);
+  sendNote(12);
+  sendNote(8);
+  sendNote(12);
+  sendNote(16);
+  sendNote(12);
+  sendNote(8);
   sendNote(12);
 }
 
