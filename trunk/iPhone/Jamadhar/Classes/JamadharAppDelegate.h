@@ -1,23 +1,20 @@
-//
-//  JamadharAppDelegate.h
-//  Jamadhar
-//
-//  Created by 高橋 啓治郎 on 10/07/02.
-//  Copyright __MyCompanyName__ 2010. All rights reserved.
-//
-
 #import <UIKit/UIKit.h>
-#import "OscFinder.h"
+#import "OscServiceFinder.h"
 
 @class EAGLView;
 
-@interface JamadharAppDelegate : NSObject <UIApplicationDelegate> {
+@interface JamadharAppDelegate : NSObject <UIApplicationDelegate>
+{
     UIWindow *window;
     EAGLView *glView;
     UILabel *messageLabel;
     UIActivityIndicatorView *activityIndicatorView;
+    
     NSTimer *messageTimer;
-    OscFinder *oscFinder;
+    NSInteger messageDelay;
+    
+    OscServiceFinder *oscServiceFinder;
+    BOOL clientInit;
 }
 
 @property (nonatomic, retain) IBOutlet UIWindow *window;
@@ -28,4 +25,3 @@
 - (void)updateMessage:(id)sender;
 
 @end
-
