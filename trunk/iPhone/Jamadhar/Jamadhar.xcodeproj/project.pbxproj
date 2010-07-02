@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0F796BBB11DDC4A600A8AC3C /* OscFinder.m in Sources */ = {isa = PBXBuildFile; fileRef = 0F796BBA11DDC4A600A8AC3C /* OscFinder.m */; };
 		0FD137BF11DDBEF200DAFB16 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 0FD137BE11DDBEF200DAFB16 /* Icon.png */; };
 		1D3623260D0F684500981E51 /* JamadharAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D3623250D0F684500981E51 /* JamadharAppDelegate.m */; };
 		1D60589B0D05DD56006BFB54 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; };
@@ -20,6 +21,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0F796BB911DDC4A600A8AC3C /* OscFinder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OscFinder.h; sourceTree = "<group>"; };
+		0F796BBA11DDC4A600A8AC3C /* OscFinder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OscFinder.m; sourceTree = "<group>"; };
 		0FD137BE11DDBEF200DAFB16 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
 		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		1D3623240D0F684500981E51 /* JamadharAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JamadharAppDelegate.h; sourceTree = "<group>"; };
@@ -62,6 +65,8 @@
 				28FD14FD0DC6FC130079059D /* EAGLView.m */,
 				1D3623240D0F684500981E51 /* JamadharAppDelegate.h */,
 				1D3623250D0F684500981E51 /* JamadharAppDelegate.m */,
+				0F796BB911DDC4A600A8AC3C /* OscFinder.h */,
+				0F796BBA11DDC4A600A8AC3C /* OscFinder.m */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -174,6 +179,7 @@
 				1D3623260D0F684500981E51 /* JamadharAppDelegate.m in Sources */,
 				28FD14FE0DC6FC130079059D /* EAGLView.m in Sources */,
 				2514C27210084DB100A42282 /* Renderer.mm in Sources */,
+				0F796BBB11DDC4A600A8AC3C /* OscFinder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
