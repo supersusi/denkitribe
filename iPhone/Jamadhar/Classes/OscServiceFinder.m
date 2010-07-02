@@ -1,8 +1,8 @@
-#import "OscFinder.h"
+#import "OscServiceFinder.h"
 #import <netinet/in.h>
 #import <arpa/inet.h>
 
-@implementation OscFinder
+@implementation OscServiceFinder
 
 @synthesize serviceName;
 @synthesize address;
@@ -44,21 +44,19 @@
     {
         NSData *data = [sender.addresses objectAtIndex:i];
         const struct sockaddr *saddr = (struct sockaddr *)[data bytes];
+        if (saddr->sa_family != AF_INET) continue;
+
+        struct sockaddr_in *saddr_in = (struct sockaddr_in *)saddr;
+        char addrstr[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &saddr_in->sin_addr, addrstr, INET_ADDRSTRLEN);
         
-        if (saddr->sa_family == AF_INET)
-        {
-            struct sockaddr_in *saddr_in = (struct sockaddr_in *)saddr;
-            char addrstr[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, &saddr_in->sin_addr, addrstr, INET_ADDRSTRLEN);
-            
-            serviceName = [[NSString alloc] initWithString:sender.name];
-            address = [[NSString alloc] initWithUTF8String:addrstr];
-            port = sender.port;
-            found = YES;
-            
-            NSLog(@"%@(%@:%d)", serviceName, address, port);
-            break;
-        }
+        serviceName = [sender.name copy];
+        address = [[NSString alloc] initWithUTF8String:addrstr];
+        port = sender.port;
+        found = YES;
+        
+        NSLog(@"%@(%@:%d)", serviceName, address, port);
+        break;
     }
     
     [sender release];
@@ -66,7 +64,7 @@
 
 - (void)dealloc
 {
-    [netServiceBrowser dealloc];
+    [netServiceBrowser release];
     [serviceName release];
     [address release];
     [super dealloc];
