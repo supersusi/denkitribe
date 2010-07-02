@@ -18,6 +18,8 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    messageLabel.text = @"Searching for service...";
+    oscFinder = [[OscFinder alloc] init];
     messageTimer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(updateMessage:) userInfo:nil repeats:TRUE];
     [glView startAnimation];
     return YES;
@@ -25,18 +27,14 @@
 
 - (void)updateMessage:(id)sender
 {
-    static int i;
-    if (i < 10) {
+    if (oscFinder.found)
+    {
         messageLabel.text = [NSString
-                             stringWithFormat:@"Waiting for server...\n%d",
-                             i];
-    } else if (i < 14) {
-        [activityIndicatorView stopAnimating];
-        messageLabel.text = @"Done!!";
-    } else {
-        messageLabel.hidden = YES;
+                             stringWithFormat:@"Connecting to service\n%@\n(%@:%d)",
+                             oscFinder.serviceName,
+                             oscFinder.address,
+                             oscFinder.port];
     }
-    i++;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application
@@ -58,6 +56,7 @@
 {
     [window release];
     [glView release];
+    [oscFinder dealloc];
 
     [super dealloc];
 }

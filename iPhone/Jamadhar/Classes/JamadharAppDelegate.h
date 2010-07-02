@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "OscFinder.h"
 
 @class EAGLView;
 
@@ -16,6 +17,7 @@
     UILabel *messageLabel;
     UIActivityIndicatorView *activityIndicatorView;
     NSTimer *messageTimer;
+    OscFinder *oscFinder;
 }
 
 @property (nonatomic, retain) IBOutlet UIWindow *window;
