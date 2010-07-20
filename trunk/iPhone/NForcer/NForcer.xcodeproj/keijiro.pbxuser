@@ -52,6 +52,66 @@
 		rLen = 0;
 		rLoc = 9223372036854775808;
 	};
+	0F3C98C211F552C000C64EFE /* Root.strings */ = {
+		isa = PBXFileReference;
+		lastKnownFileType = text.plist.strings;
+		name = Root.strings;
+		path = /Users/keijiro/Documents/iPhone/NForcer/Settings.bundle/en.lproj/Root.strings;
+		sourceTree = "<absolute>";
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1286, 428}}";
+			sepNavSelRange = "{183, 0}";
+			sepNavVisRange = "{0, 183}";
+		};
+	};
+	0F3C98C411F552C000C64EFE /* Root.plist */ = {
+		isa = PBXFileReference;
+		lastKnownFileType = text.plist.xml;
+		name = Root.plist;
+		path = /Users/keijiro/Documents/iPhone/NForcer/Settings.bundle/Root.plist;
+		sourceTree = "<absolute>";
+	};
+	0F3C98D911F5540E00C64EFE /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 0F3C98C211F552C000C64EFE /* Root.strings */;
+		name = "Root.strings: 2";
+		rLen = 0;
+		rLoc = 183;
+		rType = 0;
+		vrLen = 183;
+		vrLoc = 0;
+	};
+	0F3C98DA11F5540E00C64EFE /* PlistBookmark */ = {
+		isa = PlistBookmark;
+		fRef = 0F3C98C411F552C000C64EFE /* Root.plist */;
+		fallbackIsa = PBXBookmark;
+		isK = 0;
+		kPath = (
+		);
+		name = /Users/keijiro/Documents/iPhone/NForcer/Settings.bundle/Root.plist;
+		rLen = 0;
+		rLoc = 9223372036854775807;
+	};
+	0F3C98DB11F5540E00C64EFE /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 28FD14FD0DC6FC130079059D /* EAGLView.mm */;
+		name = "EAGLView.mm: 79";
+		rLen = 0;
+		rLoc = 2172;
+		rType = 0;
+		vrLen = 710;
+		vrLoc = 873;
+	};
+	0F3C98DC11F5540E00C64EFE /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 28FD14FC0DC6FC130079059D /* EAGLView.h */;
+		name = "EAGLView.h: 7";
+		rLen = 0;
+		rLoc = 171;
+		rType = 0;
+		vrLen = 386;
+		vrLoc = 0;
+	};
 	0F3D7A9211F54C63002712EC /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = 0F3D7A9311F54C63002712EC /* stdlib.h */;
@@ -64,6 +124,7 @@
 	};
 	0F3D7A9311F54C63002712EC /* stdlib.h */ = {
 		isa = PBXFileReference;
+		lastKnownFileType = sourcecode.c.h;
 		name = stdlib.h;
 		path = /Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.0.sdk/usr/include/stdlib.h;
 		sourceTree = "<absolute>";
@@ -110,6 +171,7 @@
 	};
 	0F3D7A9811F54C63002712EC /* UIAccelerometer.h */ = {
 		isa = PBXFileReference;
+		lastKnownFileType = sourcecode.c.h;
 		name = UIAccelerometer.h;
 		path = /Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.0.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIAccelerometer.h;
 		sourceTree = "<absolute>";
@@ -153,26 +215,6 @@
 		rType = 0;
 		vrLen = 507;
 		vrLoc = 0;
-	};
-	0F3D7A9D11F54C63002712EC /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 28FD14FD0DC6FC130079059D /* EAGLView.mm */;
-		name = "EAGLView.mm: 7";
-		rLen = 0;
-		rLoc = 93;
-		rType = 0;
-		vrLen = 831;
-		vrLoc = 0;
-	};
-	0F3D7A9E11F54C63002712EC /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 28FD14FD0DC6FC130079059D /* EAGLView.mm */;
-		name = "EAGLView.mm: 11";
-		rLen = 0;
-		rLoc = 148;
-		rType = 0;
-		vrLen = 833;
-		vrLoc = 21;
 	};
 	0F796BB911DDC4A600A8AC3C /* OscServiceFinder.h */ = {
 		uiCtxt = {
@@ -285,16 +327,16 @@
 	};
 	28FD14FC0DC6FC130079059D /* EAGLView.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1011, 410}}";
-			sepNavSelRange = "{380, 0}";
+			sepNavIntBoundsRect = "{{0, 0}, {1011, 428}}";
+			sepNavSelRange = "{171, 0}";
 			sepNavVisRange = "{0, 386}";
 		};
 	};
 	28FD14FD0DC6FC130079059D /* EAGLView.mm */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1011, 1515}}";
-			sepNavSelRange = "{148, 0}";
-			sepNavVisRange = "{21, 833}";
+			sepNavIntBoundsRect = "{{0, 0}, {1011, 1485}}";
+			sepNavSelRange = "{2172, 0}";
+			sepNavVisRange = "{873, 710}";
 		};
 	};
 	29B97313FDCFA39411CA2CEA /* Project object */ = {
@@ -380,13 +422,17 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 301284510;
-			PBXWorkspaceStateSaveDate = 301284510;
+			PBXPerProjectTemplateStateSaveDate = 301289032;
+			PBXWorkspaceStateSaveDate = 301289032;
 		};
 		perUserProjectItems = {
 			0F011C6A11DE139E00ED0BCA /* PBXTextBookmark */ = 0F011C6A11DE139E00ED0BCA /* PBXTextBookmark */;
 			0F02107D11DE09A200C23B4C /* PBXTextBookmark */ = 0F02107D11DE09A200C23B4C /* PBXTextBookmark */;
 			0F272E7811F51B4A00B7EA68 /* PlistBookmark */ = 0F272E7811F51B4A00B7EA68 /* PlistBookmark */;
+			0F3C98D911F5540E00C64EFE /* PBXTextBookmark */ = 0F3C98D911F5540E00C64EFE /* PBXTextBookmark */;
+			0F3C98DA11F5540E00C64EFE /* PlistBookmark */ = 0F3C98DA11F5540E00C64EFE /* PlistBookmark */;
+			0F3C98DB11F5540E00C64EFE /* PBXTextBookmark */ = 0F3C98DB11F5540E00C64EFE /* PBXTextBookmark */;
+			0F3C98DC11F5540E00C64EFE /* PBXTextBookmark */ = 0F3C98DC11F5540E00C64EFE /* PBXTextBookmark */;
 			0F3D7A9211F54C63002712EC /* PBXTextBookmark */ = 0F3D7A9211F54C63002712EC /* PBXTextBookmark */;
 			0F3D7A9411F54C63002712EC /* PBXTextBookmark */ = 0F3D7A9411F54C63002712EC /* PBXTextBookmark */;
 			0F3D7A9511F54C63002712EC /* PBXTextBookmark */ = 0F3D7A9511F54C63002712EC /* PBXTextBookmark */;
@@ -396,8 +442,6 @@
 			0F3D7A9A11F54C63002712EC /* PBXTextBookmark */ = 0F3D7A9A11F54C63002712EC /* PBXTextBookmark */;
 			0F3D7A9B11F54C63002712EC /* PBXTextBookmark */ = 0F3D7A9B11F54C63002712EC /* PBXTextBookmark */;
 			0F3D7A9C11F54C63002712EC /* PBXTextBookmark */ = 0F3D7A9C11F54C63002712EC /* PBXTextBookmark */;
-			0F3D7A9D11F54C63002712EC /* PBXTextBookmark */ = 0F3D7A9D11F54C63002712EC /* PBXTextBookmark */;
-			0F3D7A9E11F54C63002712EC /* PBXTextBookmark */ = 0F3D7A9E11F54C63002712EC /* PBXTextBookmark */;
 			0F796C2211DDD21B00A8AC3C /* PBXBookmark */ = 0F796C2211DDD21B00A8AC3C /* PBXBookmark */;
 			0FF9C75211F4782200DA293D /* PBXTextBookmark */ = 0FF9C75211F4782200DA293D /* PBXTextBookmark */;
 		};
