@@ -7,8 +7,8 @@
   Renderer *renderer;
   BOOL animating;
   id displayLink;
-  float touchIntensity[2];
-  float accelIntensity[3];
+  float fingerLevel[2]; // 指入力レベル
+  float wristLevel[2];  // 手首入力レベル
 }
 
 @property (readonly, nonatomic, getter=isAnimating) BOOL animating;
@@ -16,6 +16,7 @@
 - (void)startAnimation;
 - (void)stopAnimation;
 - (void)drawView:(id)sender;
-- (void)processTouch:(UITouch *)touch press:(BOOL)press;
+// タッチ共通処理
+- (void)processTouch:(UITouch *)touch isOn:(BOOL)isOn;
 
 @end
