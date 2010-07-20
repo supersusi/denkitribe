@@ -4,15 +4,13 @@
 
 @interface EAGLView : UIView <UIAccelerometerDelegate> {    
 @private
-    Renderer *renderer;
-    BOOL animating;
-    NSInteger animationFrameInterval;
-    id displayLink;
-    int touchCount;
+  Renderer *renderer;
+  BOOL animating;
+  id displayLink;
+  NSInteger touchCount;
 }
 
 @property (readonly, nonatomic, getter=isAnimating) BOOL animating;
-@property (nonatomic) NSInteger animationFrameInterval;
 
 - (void)startAnimation;
 - (void)stopAnimation;

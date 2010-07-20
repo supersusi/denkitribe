@@ -6,17 +6,17 @@
 
 @interface Renderer : NSObject {
 @private
-    EAGLContext *context;
-
-    // The pixel dimensions of the CAEAGLLayer
-    GLint backingWidth;
-    GLint backingHeight;
-
-    // The OpenGL ES names for the framebuffer and renderbuffer used to render to this view
-    GLuint defaultFramebuffer, colorRenderbuffer;
+  EAGLContext *context;
+  GLint screenWidth;
+  GLint screenHeight;
+  GLuint framebuffer;
+  GLuint renderbuffer;
+  GLfloat clearColor[3];
+  NSInteger frameCount;
 }
 
 - (void)render;
 - (BOOL)resizeFromLayer:(CAEAGLLayer *)layer;
+- (void)setClearColorRed:(GLfloat)red green:(GLfloat)green blue:(GLfloat)blue;
 
 @end
