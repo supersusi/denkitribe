@@ -9,9 +9,9 @@
 	};
 	0F02106B11DE05FE00C23B4C /* OscClient.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1011, 1056}}";
-			sepNavSelRange = "{1568, 0}";
-			sepNavVisRange = "{715, 1340}";
+			sepNavIntBoundsRect = "{{0, 0}, {1011, 1088}}";
+			sepNavSelRange = "{276, 0}";
+			sepNavVisRange = "{23, 1014}";
 		};
 	};
 	0F02106C11DE05FE00C23B4C /* OscClient.h */ = {
@@ -192,6 +192,7 @@
 	};
 	0FDE557611F586C60096D325 /* NSObjCRuntime.h */ = {
 		isa = PBXFileReference;
+		lastKnownFileType = sourcecode.c.h;
 		name = NSObjCRuntime.h;
 		path = /Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.0.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h;
 		sourceTree = "<absolute>";
@@ -215,16 +216,6 @@
 		rType = 0;
 		vrLen = 341;
 		vrLoc = 0;
-	};
-	0FDE557A11F586C60096D325 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 0F02106B11DE05FE00C23B4C /* OscClient.cpp */;
-		name = "OscClient.cpp: 64";
-		rLen = 0;
-		rLoc = 2055;
-		rType = 0;
-		vrLen = 1340;
-		vrLoc = 667;
 	};
 	0FDE557B11F586C60096D325 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -266,16 +257,6 @@
 		vrLen = 1086;
 		vrLoc = 456;
 	};
-	0FDE558C11F588A30096D325 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = 0F02106B11DE05FE00C23B4C /* OscClient.cpp */;
-		name = "OscClient.cpp: 54";
-		rLen = 0;
-		rLoc = 1568;
-		rType = 0;
-		vrLen = 1340;
-		vrLoc = 715;
-	};
 	0FE267CC11F56BDC00C91294 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = 0FE267CD11F56BDC00C91294 /* NSString.h */;
@@ -293,7 +274,21 @@
 		path = /Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS4.0.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSString.h;
 		sourceTree = "<absolute>";
 	};
-	0FE267CF11F56BDC00C91294 /* PlistBookmark */ = {
+	0FE267EA11F5710200C91294 /* PBXBookmark */ = {
+		isa = PBXBookmark;
+		fRef = 0FD137BE11DDBEF200DAFB16 /* Icon.png */;
+	};
+	0FE8E43C11F598FE005586E9 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 1D3623250D0F684500981E51 /* NForcerAppDelegate.mm */;
+		name = "NForcerAppDelegate.mm: 18";
+		rLen = 12;
+		rLoc = 534;
+		rType = 0;
+		vrLen = 1091;
+		vrLoc = 0;
+	};
+	0FE8E43D11F598FE005586E9 /* PlistBookmark */ = {
 		isa = PlistBookmark;
 		fRef = 0F3C98C411F552C000C64EFE /* Root.plist */;
 		fallbackIsa = PBXBookmark;
@@ -302,21 +297,27 @@
 		);
 		name = /Users/keijiro/Documents/iPhone/NForcer/Settings.bundle/Root.plist;
 		rLen = 0;
-		rLoc = 9223372036854775808;
+		rLoc = 9223372036854775807;
 	};
-	0FE267E711F5710200C91294 /* PBXTextBookmark */ = {
+	0FE8E43E11F598FE005586E9 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
-		fRef = 1D3623250D0F684500981E51 /* NForcerAppDelegate.mm */;
-		name = "NForcerAppDelegate.mm: 70";
+		fRef = 0F02106B11DE05FE00C23B4C /* OscClient.cpp */;
+		name = "OscClient.cpp: 47";
 		rLen = 0;
-		rLoc = 2017;
+		rLoc = 1396;
 		rType = 0;
-		vrLen = 445;
-		vrLoc = 1691;
+		vrLen = 895;
+		vrLoc = 23;
 	};
-	0FE267EA11F5710200C91294 /* PBXBookmark */ = {
-		isa = PBXBookmark;
-		fRef = 0FD137BE11DDBEF200DAFB16 /* Icon.png */;
+	0FE8E45111F599BC005586E9 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 0F02106B11DE05FE00C23B4C /* OscClient.cpp */;
+		name = "OscClient.cpp: 13";
+		rLen = 0;
+		rLoc = 276;
+		rType = 0;
+		vrLen = 1014;
+		vrLoc = 23;
 	};
 	1D3623240D0F684500981E51 /* NForcerAppDelegate.h */ = {
 		uiCtxt = {
@@ -328,9 +329,9 @@
 	};
 	1D3623250D0F684500981E51 /* NForcerAppDelegate.mm */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1219, 1154}}";
-			sepNavSelRange = "{576, 0}";
-			sepNavVisRange = "{52, 891}";
+			sepNavIntBoundsRect = "{{0, 0}, {1011, 1184}}";
+			sepNavSelRange = "{534, 12}";
+			sepNavVisRange = "{0, 1078}";
 		};
 	};
 	1D6058900D05DD3D006BFB54 /* NForcer */ = {
@@ -368,7 +369,7 @@
 		};
 	};
 	29B97313FDCFA39411CA2CEA /* Project object */ = {
-		activeBuildConfigurationName = Debug;
+		activeBuildConfigurationName = Release;
 		activeExecutable = 0FD1375411DDB2F400DAFB16 /* NForcer */;
 		activeSDKPreference = iphoneos4.0;
 		activeTarget = 1D6058900D05DD3D006BFB54 /* NForcer */;
@@ -450,8 +451,8 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 301298930;
-			PBXWorkspaceStateSaveDate = 301298930;
+			PBXPerProjectTemplateStateSaveDate = 301307040;
+			PBXWorkspaceStateSaveDate = 301307040;
 		};
 		perUserProjectItems = {
 			0F02107D11DE09A200C23B4C /* PBXTextBookmark */ = 0F02107D11DE09A200C23B4C /* PBXTextBookmark */;
@@ -464,16 +465,16 @@
 			0FDE557511F586C60096D325 /* PBXTextBookmark */ = 0FDE557511F586C60096D325 /* PBXTextBookmark */;
 			0FDE557711F586C60096D325 /* PBXTextBookmark */ = 0FDE557711F586C60096D325 /* PBXTextBookmark */;
 			0FDE557911F586C60096D325 /* PBXTextBookmark */ = 0FDE557911F586C60096D325 /* PBXTextBookmark */;
-			0FDE557A11F586C60096D325 /* PBXTextBookmark */ = 0FDE557A11F586C60096D325 /* PBXTextBookmark */;
 			0FDE557B11F586C60096D325 /* PBXTextBookmark */ = 0FDE557B11F586C60096D325 /* PBXTextBookmark */;
 			0FDE558611F5884C0096D325 /* PBXTextBookmark */ = 0FDE558611F5884C0096D325 /* PBXTextBookmark */;
 			0FDE558711F5884C0096D325 /* PBXTextBookmark */ = 0FDE558711F5884C0096D325 /* PBXTextBookmark */;
 			0FDE558811F5884C0096D325 /* PBXTextBookmark */ = 0FDE558811F5884C0096D325 /* PBXTextBookmark */;
-			0FDE558C11F588A30096D325 /* PBXTextBookmark */ = 0FDE558C11F588A30096D325 /* PBXTextBookmark */;
 			0FE267CC11F56BDC00C91294 /* PBXTextBookmark */ = 0FE267CC11F56BDC00C91294 /* PBXTextBookmark */;
-			0FE267CF11F56BDC00C91294 /* PlistBookmark */ = 0FE267CF11F56BDC00C91294 /* PlistBookmark */;
-			0FE267E711F5710200C91294 /* PBXTextBookmark */ = 0FE267E711F5710200C91294 /* PBXTextBookmark */;
 			0FE267EA11F5710200C91294 /* PBXBookmark */ = 0FE267EA11F5710200C91294 /* PBXBookmark */;
+			0FE8E43C11F598FE005586E9 /* PBXTextBookmark */ = 0FE8E43C11F598FE005586E9 /* PBXTextBookmark */;
+			0FE8E43D11F598FE005586E9 /* PlistBookmark */ = 0FE8E43D11F598FE005586E9 /* PlistBookmark */;
+			0FE8E43E11F598FE005586E9 /* PBXTextBookmark */ = 0FE8E43E11F598FE005586E9 /* PBXTextBookmark */;
+			0FE8E45111F599BC005586E9 /* PBXTextBookmark */ = 0FE8E45111F599BC005586E9 /* PBXTextBookmark */;
 		};
 		sourceControlManager = 0FD1376611DDB2FD00DAFB16 /* Source Control */;
 		userBuildSettings = {
