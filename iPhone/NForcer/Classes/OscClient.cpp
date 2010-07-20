@@ -29,37 +29,45 @@ void OscClient::Close() {
   s_pTransmitSocket = NULL;
 }
 
-void OscClient::SendTouchMessage(int slot, float pitch, bool press) {
+void OscClient::SendFingerMessage(int slot, float level) {
   if (!s_pStream) return;
-  
-  float note = press ? 1.0f : 0.0f;
-
-  char pathNote[64], pathPitch[64];
-  std::snprintf(pathNote, sizeof pathNote, "%s/touch/%d/note",
-                s_basePath.c_str(), slot);
-  std::snprintf(pathPitch, sizeof pathPitch, "%s/touch/%d/pitch",
-                s_basePath.c_str(), slot);
-  
-  *s_pStream << osc::BeginBundleImmediate
-             << osc::BeginMessage(pathPitch) << pitch << osc::EndMessage
-             << osc::BeginMessage(pathNote) << note << osc::EndMessage
-             << osc::EndBundle;
+  // スロットに対応するパスの生成
+  std::string path;
+  {
+    char temp[64];
+    std::snprintf(temp, sizeof temp, "%s/finger/%d/", s_basePath.c_str(), slot);
+    path = temp;
+  }
+  // ここからバンドル
+  *s_pStream << osc::BeginBundleImmediate;
+  // level (0.0 - 1.0) メッセージ
+  if (level > 0.0f) {
+    *s_pStream << osc::BeginMessage((path + "level").c_str());
+    *s_pStream << level << osc::EndMessage;
+  }
+  // touch (0.0 / 1.0) メッセージ
+  *s_pStream << osc::BeginMessage((path + "touch").c_str());
+  *s_pStream << (level > 0.0f ? 1.0f : 0.0f) << osc::EndMessage;
+  // ここまでバンドル
+  *s_pStream << osc::EndBundle;
+  // 送信とバッファのクリア
   s_pTransmitSocket->Send(s_pStream->Data(), s_pStream->Size());
   s_pStream->Clear();
 }
 
-void OscClient::SendAccelMessage(float x, float y, float z) {
+void OscClient::SendWristMessage(float pitch, float roll) {
   if (!s_pStream) return;
-  
-  std::string msgx = s_basePath + "/accel/x";
-  std::string msgy = s_basePath + "/accel/y";
-  std::string msgz = s_basePath + "/accel/z";
-  
-  *s_pStream << osc::BeginBundleImmediate
-             << osc::BeginMessage(msgx.c_str()) << x << osc::EndMessage
-             << osc::BeginMessage(msgy.c_str()) << y << osc::EndMessage
-             << osc::BeginMessage(msgz.c_str()) << z << osc::EndMessage
-             << osc::EndBundle;
+  // ここからバンドル
+  *s_pStream << osc::BeginBundleImmediate;
+  // pitch (0.0 - 1.0) メッセージ
+  *s_pStream << osc::BeginMessage((s_basePath + "/wrist/pitch").c_str());
+  *s_pStream << pitch << osc::EndMessage;
+  // roll (0.0 - 1.0) メッセージ
+  *s_pStream << osc::BeginMessage((s_basePath + "/wrist/roll").c_str());
+  *s_pStream << roll << osc::EndMessage;
+  // ここまでバンドル
+  *s_pStream << osc::EndBundle;
+  // 送信とバッファのクリア
   s_pTransmitSocket->Send(s_pStream->Data(), s_pStream->Size());
   s_pStream->Clear();
 }

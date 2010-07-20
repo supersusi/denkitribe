@@ -27,19 +27,18 @@
 
     animating = FALSE;
     displayLink = nil;
-    touchIntensity[0] = touchIntensity[1] = 0;
-    accelIntensity[0] = accelIntensity[2] = accelIntensity[2] = 0;
+    fingerLevel[0] = fingerLevel[1] = 0;
+    wristLevel[0] = wristLevel[1] = 0;
   }
   return self;
 }
 
 - (void)drawView:(id)sender {
   // クリアカラーの設定
-  GLfloat level = (touchIntensity[0] + touchIntensity[1]) * 0.5f;
-  GLfloat r = ABS(accelIntensity[0]) * 0.15f + level;
-  GLfloat g = ABS(accelIntensity[1]) * 0.15f + level;
-  GLfloat b = ABS(accelIntensity[2]) * 0.15f + level;
-  [renderer setClearColorRed:r green:g blue:b];
+  GLfloat level = (fingerLevel[0] + fingerLevel[1]) * 0.5f;
+  GLfloat gadd = level + wristLevel[0] * 0.15f;
+  GLfloat badd = level + wristLevel[1] * 0.15f;
+  [renderer setClearColorRed:level green:(level + gadd) blue:(level + badd)];
   // レンダリング
   [renderer render];
 }
@@ -56,11 +55,10 @@
                    selector:@selector(drawView:)];
     [displayLink addToRunLoop:[NSRunLoop currentRunLoop]
                       forMode:NSDefaultRunLoopMode];
-
-    [[UIAccelerometer sharedAccelerometer] setUpdateInterval:(1.0 / 15)];
-    [[UIAccelerometer sharedAccelerometer] setDelegate:self];
-
     animating = TRUE;
+    // 加速度センサーのデリゲートを設定
+    [[UIAccelerometer sharedAccelerometer] setUpdateInterval:(1.0 / 20)];
+    [[UIAccelerometer sharedAccelerometer] setDelegate:self];
   }
 }
 
@@ -73,41 +71,50 @@
 }
 
 // タッチ処理
-- (void)processTouch:(UITouch *)touch press:(BOOL)press {
+- (void)processTouch:(UITouch *)touch isOn:(BOOL)isOn {
   CGPoint pt = [touch locationInView:self];
+  // Ｘ座標からスロット特定
   NSInteger slot = (pt.x < self.center.x) ? 0 : 1;
-  float pitch = MIN(MAX(1.05f - 1.1f * pt.y / self.center.y, 0.0f), 1.0f);
-  OscClient::SendTouchMessage(slot, pitch, press);
-  touchIntensity[slot] = press ? pitch : 0;
+  // Ｙ座標からレベル算出（中央から上に向かって上昇、指離し時はゼロ）
+  float y = isOn ? 1.05f - 1.1f * pt.y / self.center.y : 0.0f;
+  fingerLevel[slot] = MIN(MAX(y, 0.0f), 1.0f);
+  // メッセージ送信
+  OscClient::SendFingerMessage(slot, fingerLevel[slot]);
 }
 
 // タッチ開始
 - (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event {
   for (UITouch *touch in touches) {
-    [self processTouch:touch press:YES];
+    [self processTouch:touch isOn:YES];
   }
 }
 
 // タッチ移動
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
   for (UITouch *touch in touches) {
-    [self processTouch:touch press:YES];
+    [self processTouch:touch isOn:YES];
   }
 }
 
 // タッチ終了
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
   for (UITouch *touch in touches) {
-    [self processTouch:touch press:NO];
+    [self processTouch:touch isOn:NO];
   }
 }
 
+// 加速度センサー
 - (void)accelerometer:(UIAccelerometer*)accelerometer
         didAccelerate:(UIAcceleration*)acceleration {
-  OscClient::SendAccelMessage(acceleration.x, acceleration.y, acceleration.z);
-  accelIntensity[0] = acceleration.x;
-  accelIntensity[1] = acceleration.y;
-  accelIntensity[2] = acceleration.z;
+  // Ｙ軸からピッチ角を算出（水平から上向きに値上昇）
+  float pitch = MAX(MIN(-acceleration.y * 1.1f, 1.0f), 0.0f);
+  // Ｚ軸からロール角を算出（水平から上下に値上昇）
+  float roll = MAX(MIN(ABS(acceleration.x) * 1.2f - 0.2f, 1.0f), 0.0f);
+  // ローパスフィルター
+  wristLevel[0] = 0.5f * wristLevel[0] + 0.5f * pitch;
+  wristLevel[1] = 0.5f * wristLevel[1] + 0.5f * roll;
+  // メッセージ送信
+  OscClient::SendWristMessage(wristLevel[0], wristLevel[1]);
 }
 
 - (void)dealloc {

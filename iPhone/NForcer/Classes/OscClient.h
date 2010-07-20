@@ -6,8 +6,8 @@ public:
   static void SetBasePath(const char* pPath);
   static void Open(const char* pAddress, int port);
   static void Close();
-  static void SendTouchMessage(int slot, float pitch, bool press);
-  static void SendAccelMessage(float x, float y, float z);
+  static void SendFingerMessage(int slot, float level);
+  static void SendWristMessage(float pitch, float roll);
 };
 
 #endif
