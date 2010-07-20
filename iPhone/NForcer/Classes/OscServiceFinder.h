@@ -1,14 +1,13 @@
 #import <Foundation/Foundation.h>
 
 @interface OscServiceFinder : NSObject <NSNetServiceBrowserDelegate,
-                                 NSNetServiceDelegate>
-{
+                                        NSNetServiceDelegate> {
 @private
-    NSNetServiceBrowser *netServiceBrowser;
-    NSString *serviceName;
-    NSString *address;
-    NSInteger port;
-    BOOL found;
+  NSNetServiceBrowser *netServiceBrowser;
+  NSString *serviceName;
+  NSString *address;
+  NSInteger port;
+  BOOL found;
 }
 
 @property (readonly, nonatomic) NSString *serviceName;

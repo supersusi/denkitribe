@@ -27,11 +27,20 @@
 
     animating = FALSE;
     displayLink = nil;
+    touchIntensity[0] = touchIntensity[1] = 0;
+    accelIntensity[0] = accelIntensity[2] = accelIntensity[2] = 0;
   }
   return self;
 }
 
 - (void)drawView:(id)sender {
+  // クリアカラーの設定
+  GLfloat level = (touchIntensity[0] + touchIntensity[1]) * 0.5f;
+  GLfloat r = ABS(accelIntensity[0]) * 0.15f + level;
+  GLfloat g = ABS(accelIntensity[1]) * 0.15f + level;
+  GLfloat b = ABS(accelIntensity[2]) * 0.15f + level;
+  [renderer setClearColorRed:r green:g blue:b];
+  // レンダリング
   [renderer render];
 }
 
@@ -63,31 +72,42 @@
   }
 }
 
-- (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event {
-  for (UITouch *touch in touches) {
-    NSString* path = [NSString stringWithFormat:@"/1/touch/%d", touchCount];
-    Jamadhar::OscClient::SendMessage([path UTF8String], 1.0f);
-    touchCount++;
-  }
-  GLfloat color = touchCount * 0.3f;
-  [renderer setClearColorRed:color green:color blue:color];
+// タッチ処理
+- (void)processTouch:(UITouch *)touch press:(BOOL)press {
+  CGPoint pt = [touch locationInView:self];
+  NSInteger slot = (pt.x < self.center.x) ? 0 : 1;
+  float pitch = MIN(MAX(1.05f - 1.1f * pt.y / self.center.y, 0.0f), 1.0f);
+  OscClient::SendTouchMessage(slot, pitch, press);
+  touchIntensity[slot] = press ? pitch : 0;
 }
 
+// タッチ開始
+- (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event {
+  for (UITouch *touch in touches) {
+    [self processTouch:touch press:YES];
+  }
+}
+
+// タッチ移動
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+  for (UITouch *touch in touches) {
+    [self processTouch:touch press:YES];
+  }
+}
+
+// タッチ終了
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
   for (UITouch *touch in touches) {
-    touchCount--;
-    NSString* path = [NSString stringWithFormat:@"/1/touch/%d", touchCount];
-    Jamadhar::OscClient::SendMessage([path UTF8String], 0.0f);
+    [self processTouch:touch press:NO];
   }
-  GLfloat color = touchCount * 0.3f;
-  [renderer setClearColorRed:color green:color blue:color];
 }
 
 - (void)accelerometer:(UIAccelerometer*)accelerometer
         didAccelerate:(UIAcceleration*)acceleration {
-  Jamadhar::OscClient::SendMessage("/1/accel/x", acceleration.x);
-  Jamadhar::OscClient::SendMessage("/1/accel/y", acceleration.y);
-  Jamadhar::OscClient::SendMessage("/1/accel/z", acceleration.z);
+  OscClient::SendAccelMessage(acceleration.x, acceleration.y, acceleration.z);
+  accelIntensity[0] = acceleration.x;
+  accelIntensity[1] = acceleration.y;
+  accelIntensity[2] = acceleration.z;
 }
 
 - (void)dealloc {

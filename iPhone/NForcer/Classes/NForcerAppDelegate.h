@@ -3,18 +3,16 @@
 
 @class EAGLView;
 
-@interface NForcerAppDelegate : NSObject <UIApplicationDelegate>
-{
-    UIWindow *window;
-    EAGLView *glView;
-    UILabel *messageLabel;
-    UIActivityIndicatorView *activityIndicatorView;
-    
-    NSTimer *messageTimer;
-    NSInteger messageDelay;
-    
-    OscServiceFinder *oscServiceFinder;
-    BOOL clientInit;
+@interface NForcerAppDelegate : NSObject <UIApplicationDelegate> {
+  UIWindow *window;
+  EAGLView *glView;
+  UILabel *messageLabel;
+  UIActivityIndicatorView *activityIndicatorView;
+  
+  NSTimer *messageTimer;
+  NSInteger messageDelay;
+  OscServiceFinder *oscServiceFinder;
+  BOOL connected;
 }
 
 @property (nonatomic, retain) IBOutlet UIWindow *window;

@@ -1,15 +1,13 @@
 #ifndef INCLUDE_OSCCLIENT_H
 #define INCLUDE_OSCCLIENT_H
 
-namespace Jamadhar {
-
 class OscClient {
 public:
-    static void Initialize(const char* pAddress, int port);
-    static void Terminate();
-    static void SendMessage(const char* pPath, float value);
+  static void SetBasePath(const char* pPath);
+  static void Open(const char* pAddress, int port);
+  static void Close();
+  static void SendTouchMessage(int slot, float pitch, bool press);
+  static void SendAccelMessage(float x, float y, float z);
 };
-
-} // namespace Jamadhar
 
 #endif
