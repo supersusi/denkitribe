@@ -25,8 +25,8 @@
 
 - (void)render {
   GLfloat intensity = 0.33f * (clearColor[0] + clearColor[1] + clearColor[2]);
-  GLfloat fading = 0.2f + 0.2f * sinf(0.03f * frameCount);
-  GLfloat noise = (intensity > 0.1f) ? 0.1f / RAND_MAX * rand() : .0f;
+  GLfloat fading = 0.1f + 0.1f * sinf(0.03f * frameCount);
+  GLfloat noise = (intensity > 0.2f) ? 0.1f / RAND_MAX * rand() : .0f;
 
   GLfloat cl_r = clearColor[0] + fading + noise;
   GLfloat cl_g = clearColor[1] + fading + noise;
