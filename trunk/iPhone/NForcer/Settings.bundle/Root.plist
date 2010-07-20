@@ -18,14 +18,16 @@
 			<key>Key</key>
 			<string>osc_pathname_preference</string>
 			<key>DefaultValue</key>
-			<string>/nf1</string>
+			<string></string>
 			<key>Values</key>
 			<array>
+				<string></string>
 				<string>/nf1</string>
 				<string>/nf2</string>
 			</array>
 			<key>Titles</key>
 			<array>
+				<string>/</string>
 				<string>/nf1</string>
 				<string>/nf2</string>
 			</array>

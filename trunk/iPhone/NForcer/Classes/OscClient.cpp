@@ -12,7 +12,7 @@ namespace {
 }
 
 void OscClient::SetBasePath(const char* pPath) {
-  s_basePath = pPath;
+  s_basePath = pPath ? pPath : "";
 }
 
 void OscClient::Open(const char* pAddress, int port) {
